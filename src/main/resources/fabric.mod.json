@@ -1,0 +1,38 @@
+{
+	"schemaVersion": 1,
+	"id": "pyrofrost",
+	"version": "${version}",
+	"name": "Pyrofrost",
+	"description": "",
+	"authors": [
+		"TalonFox"
+	],
+	"contact": {
+		"homepage": "https://talonfox.github.io",
+		"sources": "https://github.com/TalonFox/Pyrofrost"
+	},
+	"license": "MIT",
+	"icon": "assets/pyrofrost/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+          "sh.talonfox.Pyrofrost"
+		],
+		"client": [
+			"sh.talonfox.PyrofrostClient"
+		]
+	},
+	"mixins": [
+		"pyrofrost.mixins.json",
+		{
+			"config": "pyrofrost.client.mixins.json",
+			"environment": "client"
+		}
+	],
+	"depends": {
+		"fabricloader": ">=0.14.21",
+		"minecraft": "~1.20.1",
+		"java": ">=17",
+		"fabric-api": "*"
+	}
+}
