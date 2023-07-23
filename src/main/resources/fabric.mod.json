@@ -16,10 +16,10 @@
 	"environment": "*",
 	"entrypoints": {
 		"main": [
-          "sh.talonfox.Pyrofrost"
+			"sh.talonfox.pyrofrost.Pyrofrost"
 		],
 		"client": [
-			"sh.talonfox.PyrofrostClient"
+			"sh.talonfox.pyrofrost.PyrofrostClient"
 		]
 	},
 	"mixins": [

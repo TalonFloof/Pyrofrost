@@ -1,4 +1,4 @@
-package sh.talonfox;
+package sh.talonfox.pyrofrost;
 
 import net.fabricmc.api.ClientModInitializer;
 

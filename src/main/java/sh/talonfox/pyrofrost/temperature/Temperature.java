@@ -1,6 +1,5 @@
-package sh.talonfox.temperature;
+package sh.talonfox.pyrofrost.temperature;
 
-import net.fabricmc.api.Environment;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -16,48 +15,14 @@ import net.minecraft.world.LightType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.PalettedContainer;
-import sh.talonfox.Pyrofrost;
+import sh.talonfox.pyrofrost.Pyrofrost;
 
 import java.util.HashMap;
 import java.util.Map;
 
-/*
- private static final BiomeData BOG = new BiomeData(0.351F, 60.0F, 40F, 10F);
-    private static final BiomeData COLD_OCEAN = new BiomeData(0.373F, 20.0F, 20F, 5F);
-    private static final BiomeData COLD_FOREST = new BiomeData(0.373F, 60.0F, 40F, 12F);
-    private static final BiomeData COLD_DESERT = new BiomeData(0.395F, 20.0F, 40F, 20F);
-    private static final BiomeData DEEP_COLD_OCEAN = new BiomeData(0.440F, 20.0F, 20F, 5F);
-    private static final BiomeData ICY = new BiomeData(0.507F, 20.0F, 20F, 5F);
-    private static final BiomeData TAIGA = new BiomeData(0.507F, 50.0F, 40F, 10F);
-    private static final BiomeData OCEAN = new BiomeData(0.551F, 70.0F, 40F, 10F);
-    private static final BiomeData RIVER = new BiomeData(0.551F, 70.0F, 40F, 10F);
-    private static final BiomeData DEEP_LUKEWARM_OCEAN = new BiomeData(0.596F, 70.0F, 40F, 10F);
-    private static final BiomeData EXTREME_HILLS = new BiomeData(0.618F, 50.0F, 40F, 10F);
-    private static final BiomeData MOUNTAIN = new BiomeData(0.618F, 50.0F, 40F, 10F);
-    private static final BiomeData LUKEWARM_OCEAN = new BiomeData(0.640F, 70.0F, 40F, 10F);
-    private static final BiomeData BEACH = new BiomeData(0.663F, 70.0F, 40F, 10F);
-    private static final BiomeData FOREST = new BiomeData(0.663F, 50.0F, 40F, 12F);
-    public static final BiomeData UNDERGROUND = new BiomeData(0.663F, 40.0F, 40F, 12F);
-    private static final BiomeData SWAMP = new BiomeData(0.685F, 90.0F, 40F, 12F);
-    private static final BiomeData MUSHROOM = new BiomeData(0.685F, 70.0F, 40F, 12F);
-    private static final BiomeData WARM_OCEAN = new BiomeData(0.730F, 70.0F, 40F, 10F);
-    private static final BiomeData PLAINS = new BiomeData(0.774F, 60.0F, 40F, 15F);
-    private static final BiomeData LUSH_DESERT = new BiomeData(0.886F, 60.0F, 40F, 15F);
-    private static final BiomeData DRYLAND = new BiomeData(0.886F, 35.0F, 40F, 15F);
-    private static final BiomeData RAINFOREST = new BiomeData(0.886F, 95.0F, 40F, 15F);
-    private static final BiomeData JUNGLE = new BiomeData(0.997F, 90.0F, 40F, 15F);
-    private static final BiomeData VOLCANIC = new BiomeData(1.04F, 35.0F, 40F, 15F);
-    private static final BiomeData SAVANNA = new BiomeData(1.108F, 30.0F, 40F, 15F);
-    private static final BiomeData MESA = new BiomeData(1.309F, 20.0F, 40F, 15F);
-    private static final BiomeData DESERT = new BiomeData(1.354F, 20.0F, 40F, 20F);
-    private static final BiomeData NONE = new BiomeData(0.15F, 40.0F, 40F, 0F);
-    private static final BiomeData THEEND = new BiomeData(0.551F, 40.0F, 40F, 0F);
-    private static final BiomeData NETHER = new BiomeData(1.666F, 20.0F, 40F, 0F);
- */
-
 public class Temperature {
     private int wetness;
-    private float coreTemp;
+    private float coreTemp = 1.634457832F;
     private float skinTemp;
     private ServerPlayerEntity serverPlayer;
     private boolean isServerSide;
@@ -65,42 +30,60 @@ public class Temperature {
     private int ticks = 0;
     private static HashMap<TagKey<Biome>, Float> temperature = new HashMap<>();
     private static HashMap<TagKey<Biome>, Float> humidity = new HashMap<>();
+    private static HashMap<TagKey<Biome>, Float> dayNightOffset = new HashMap<>();
 
     public static void initialize() {
         temperature.put(BiomeTags.IS_BADLANDS,1.309F);
         humidity.put(BiomeTags.IS_BADLANDS,20.0F);
+        dayNightOffset.put(BiomeTags.IS_BADLANDS,15F);
         temperature.put(BiomeTags.IS_BEACH,0.663F);
         humidity.put(BiomeTags.IS_BEACH,70.0F);
+        dayNightOffset.put(BiomeTags.IS_BEACH,10F);
         temperature.put(BiomeTags.IS_FOREST,0.663F);
         humidity.put(BiomeTags.IS_FOREST,50.0F);
+        dayNightOffset.put(BiomeTags.IS_FOREST,12F);
         temperature.put(BiomeTags.IS_END,0.551F);
         humidity.put(BiomeTags.IS_END,40.0F);
+        dayNightOffset.put(BiomeTags.IS_END,0F);
         temperature.put(BiomeTags.IS_HILL,0.618F);
         humidity.put(BiomeTags.IS_HILL,50.0F);
+        dayNightOffset.put(BiomeTags.IS_HILL,10F);
         temperature.put(BiomeTags.IS_DEEP_OCEAN,0.596F);
         humidity.put(BiomeTags.IS_DEEP_OCEAN,70.0F);
+        dayNightOffset.put(BiomeTags.IS_DEEP_OCEAN,5F);
         temperature.put(BiomeTags.IS_OCEAN,0.640F);
         humidity.put(BiomeTags.IS_OCEAN,70.0F);
+        dayNightOffset.put(BiomeTags.IS_OCEAN,10F);
         temperature.put(BiomeTags.IS_MOUNTAIN,0.618F);
         humidity.put(BiomeTags.IS_MOUNTAIN,50.0F);
+        dayNightOffset.put(BiomeTags.IS_MOUNTAIN,10F);
         temperature.put(BiomeTags.IS_JUNGLE,0.997F);
         humidity.put(BiomeTags.IS_JUNGLE,90.0F);
+        dayNightOffset.put(BiomeTags.IS_JUNGLE,15F);
         temperature.put(BiomeTags.IS_NETHER,1.666F);
         humidity.put(BiomeTags.IS_NETHER,20.0F);
+        dayNightOffset.put(BiomeTags.IS_NETHER,0F);
         temperature.put(BiomeTags.IS_RIVER,0.551F);
         humidity.put(BiomeTags.IS_RIVER,70.0F);
+        dayNightOffset.put(BiomeTags.IS_RIVER,10F);
         temperature.put(BiomeTags.IS_SAVANNA,1.108F);
         humidity.put(BiomeTags.IS_SAVANNA,30.0F);
+        dayNightOffset.put(BiomeTags.IS_SAVANNA,15F);
         temperature.put(BiomeTags.IS_TAIGA,0.507F);
         humidity.put(BiomeTags.IS_TAIGA,50.0F);
+        dayNightOffset.put(BiomeTags.IS_TAIGA,10F);
         temperature.put(BiomeTags.IGLOO_HAS_STRUCTURE,0.507F);
         humidity.put(BiomeTags.IGLOO_HAS_STRUCTURE,20.0F);
+        dayNightOffset.put(BiomeTags.IGLOO_HAS_STRUCTURE,5F);
         temperature.put(BiomeTags.VILLAGE_PLAINS_HAS_STRUCTURE,0.774F);
         humidity.put(BiomeTags.VILLAGE_PLAINS_HAS_STRUCTURE,60.0F);
+        dayNightOffset.put(BiomeTags.VILLAGE_PLAINS_HAS_STRUCTURE,15F);
         temperature.put(BiomeTags.RUINED_PORTAL_SWAMP_HAS_STRUCTURE,0.685F);
         humidity.put(BiomeTags.RUINED_PORTAL_SWAMP_HAS_STRUCTURE,90.0F);
+        dayNightOffset.put(BiomeTags.RUINED_PORTAL_SWAMP_HAS_STRUCTURE,10F);
         temperature.put(BiomeTags.DESERT_PYRAMID_HAS_STRUCTURE,1.354F);
         humidity.put(BiomeTags.DESERT_PYRAMID_HAS_STRUCTURE,20.0F);
+        dayNightOffset.put(BiomeTags.DESERT_PYRAMID_HAS_STRUCTURE,20F);
     }
 
     public Temperature(ServerPlayerEntity player, boolean shouldUpdate) {
@@ -111,6 +94,12 @@ public class Temperature {
     public void tick() {
         ticks += 1;
         if(ticks % 20 == 0) {
+            float humidity = this.getBiomeHumidity(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()));
+            float dryTemperature = serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()).value().computeTemperature(serverPlayer.getBlockPos());
+            float dayNightOffset = getDayNightOffset(serverPlayer.getServerWorld(),getBiomeDayNightOffset(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos())),humidity);
+            Pyrofrost.LOGGER.info("Dry Temperature: "+mcTempConv(dryTemperature+dayNightOffset)+" degrees F");
+            Pyrofrost.LOGGER.info("Relative Humidity: "+humidity+"%");
+            Pyrofrost.LOGGER.info("Core Temperature: "+mcTempConv(coreTemp)+" degrees F");
             Pyrofrost.LOGGER.info("WGBT: "+getWBGT());
         }
     }
@@ -142,7 +131,7 @@ public class Temperature {
         return tempToCelsius(blackGlobeTemp);
     }
 
-    private static float getBiomeTemperature(RegistryEntry<Biome> biome) {
+    private float getBiomeTemperature(RegistryEntry<Biome> biome) {
         for(Map.Entry<TagKey<Biome>,Float> entry : temperature.entrySet()) {
             if (biome.isIn(entry.getKey())) {
                 return entry.getValue();
@@ -151,13 +140,23 @@ public class Temperature {
         return 0.663F;
     }
 
-    private static float getBiomeHumidity(RegistryEntry<Biome> biome) {
+    private float getBiomeHumidity(RegistryEntry<Biome> biome) {
+        float rainBonus = ((serverPlayer.getServerWorld().hasRain(serverPlayer.getBlockPos().withY(320)) || serverPlayer.getServerWorld().isRaining())?0F:-20F); // We put both conditions to retain compatibility with Enhanced Weather
         for(Map.Entry<TagKey<Biome>,Float> entry : humidity.entrySet()) {
+            if (biome.isIn(entry.getKey())) {
+                return entry.getValue()+rainBonus;
+            }
+        }
+        return 40.0F+rainBonus;
+    }
+
+    private float getBiomeDayNightOffset(RegistryEntry<Biome> biome) {
+        for(Map.Entry<TagKey<Biome>,Float> entry : dayNightOffset.entrySet()) {
             if (biome.isIn(entry.getKey())) {
                 return entry.getValue();
             }
         }
-        return 40.0F;
+        return 0F;
     }
 
     private static double getHeatIndex(float dryTemp, double rh) {
@@ -180,8 +179,8 @@ public class Temperature {
     }
 
     private double getWBGT() {
-        float dryTemperature = getBiomeTemperature(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()));
-        float humidity = getBiomeHumidity(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()));
+        float humidity = this.getBiomeHumidity(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()));
+        float dryTemperature = serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()).value().computeTemperature(serverPlayer.getBlockPos())+getDayNightOffset(serverPlayer.getServerWorld(),getBiomeDayNightOffset(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos())),humidity);
         double wetTemperature = getHeatIndex(dryTemperature,humidity);
         double blackGlobeTemp = (float)getBlackGlobe(getSolarRadiation(serverPlayer.getServerWorld(),serverPlayer.getBlockPos()), dryTemperature, humidity);
         EnvironmentData data = getInfo();
@@ -258,5 +257,24 @@ public class Temperature {
         radiation += sunlight * 100;
 
         return (float)Math.max(radiation, 0);
+    }
+
+    private static float getDayNightOffset(ServerWorld world, float maxTemp, double relativeHumidity) {
+        if(maxTemp == 0F) return 0F;
+        long time = (world.getTimeOfDay() % 24000);
+        float increaseTemp = (maxTemp * 0.022289157F) / 10000F;
+        float decreaseTemp = (maxTemp * 0.022289157F) / 14000F;
+        float humidityOffset = 1.0F - (float) (relativeHumidity / 100);
+        float offset;
+
+        if (time > 23000) {
+            offset = (24001 - time) * increaseTemp;
+        } else if (time < 9001) {
+            offset = (time + 1000) * increaseTemp;
+        } else {
+            offset = (maxTemp * 0.022289157F) - ((time - 9000) * decreaseTemp);
+        }
+
+        return offset * humidityOffset;
     }
 }

@@ -1,4 +1,4 @@
-package sh.talonfox.temperature;
+package sh.talonfox.pyrofrost.temperature;
 
 import net.minecraft.util.Identifier;
 
