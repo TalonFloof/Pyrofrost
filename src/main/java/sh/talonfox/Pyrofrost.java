@@ -7,6 +7,7 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sh.talonfox.temperature.Temperature;
+import sh.talonfox.temperature.ThermalRadiation;
 
 import java.util.HashMap;
 import java.util.UUID;
@@ -24,7 +25,7 @@ public class Pyrofrost implements ModInitializer {
 		// This code runs as soon as Minecraft is in a mod-load-ready state.
 		// However, some things (like resources) may still be uninitialized.
 		// Proceed with mild caution.
-
+		ThermalRadiation.initialize();
 		LOGGER.info("owo");
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {
@@ -32,7 +33,7 @@ public class Pyrofrost implements ModInitializer {
 		});
 		ServerTickEvents.START_SERVER_TICK.register((server) -> {
 			playerTemps.forEach((uuid, temperature) -> {
-
+				temperature.tick();
 			});
 		});
 	}
