@@ -12,6 +12,7 @@ import net.minecraft.util.Identifier;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.world.GameRules;
 import net.minecraft.world.LightType;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
@@ -24,6 +25,7 @@ import java.util.Map;
 
 public class Temperature {
     private int wetness;
+    private float thirst = 10F;
     private float coreTemp = 1.634457832F;
     private float skinTemp = 1.634457832F;
     private TemperatureDirection skinTempDir = TemperatureDirection.NONE;
@@ -200,11 +202,17 @@ public class Temperature {
     }
 
     public void tick() {
+        if(ticks % 2 == 0) {
+            if (this.coreTemp < LOW) {
+                serverPlayer.setFrozenTicks(serverPlayer.getFrozenTicks() + 5);
+            }
+        }
         ticks += 1;
         if(ticks % 16 == 0 || ticks % 60 == 0) {
             this.wbgt = getWBGT();
+            boolean sweat = false;
             this.skinTempDir = getSkinTemperatureDirection((float)this.wbgt, this.skinTemp);
-            float tempChange = getAirTemperatureSkinChange(this.serverPlayer, 0F);
+            float tempChange = getAirTemperatureSkinChange(this.serverPlayer, this.wbgt < 0.997F ? 4.3F*3F : 0F);
             if (tempChange > 0.0F) {
                 switch (skinTempDir) {
                     case COOLING -> {
@@ -215,12 +223,30 @@ public class Temperature {
                     }
                     case COOLING_NORMALLY -> {
                         tempChange = -(tempChange);
+                        float exhaustion = Math.abs(Math.min(tempChange * 200.0F, 0.2F));
+                        serverPlayer.getHungerManager().addExhaustion(exhaustion);
+                        sweat = true;
                     }
                     case WARMING -> {
-                        tempChange = Math.min(tempChange * 70.0F, 0.022289157F * 3.0F);
+                        if (this.thirst <= 0) {
+                            tempChange = Math.min(tempChange * 70.0F, 0.022289157F * 3.0F);
+                        } else {
+                            this.thirst -= Math.min(tempChange * 150.0F, 0.3F);
+                            if (this.thirst < 0) {
+                                this.thirst = 0;
+                            }
+                            sweat = true;
+                        }
                     }
                     case WARMING_RAPIDLY -> tempChange = Math.min(tempChange * 100.0F, 0.022289157F * 4.0F);
                     case WARMING_NORMALLY -> {
+                        if(this.thirst > 0) {
+                            this.thirst -= Math.min(tempChange * 100.0F, 0.1F);
+                            if (this.thirst < 0) {
+                                this.thirst = 0;
+                            }
+                            sweat = true;
+                        }
                     }
                 }
             }
@@ -232,15 +258,36 @@ public class Temperature {
                     tempChange = -((this.skinTemp - NORMAL) / 40.0F);
                 }
             }
+            var oldSkinTemp = this.skinTemp;
             this.skinTemp += tempChange;
-            UpdateTemperature.send(serverPlayer.getServer(),serverPlayer,this.coreTemp,this.skinTemp,(float)this.wbgt);
+            final TemperatureDirection coreTempDir = getCoreTemperatureDirection(oldSkinTemp, this.coreTemp, this.skinTemp);
+            float diff = Math.abs(this.skinTemp - this.coreTemp);
+            float change;
+            if (coreTempDir.coreRate > 0.0F) {
+                change = diff * coreTempDir.coreRate;
+            }
+            else {
+                change = diff * 0.1F;
+            }
+            if (this.skinTemp < this.coreTemp) {
+                this.coreTemp -= change;
+                if (coreTempDir == TemperatureDirection.COOLING_RAPIDLY) {
+                    this.coreTemp = Math.max(this.coreTemp, NORMAL);
+                }
+            } else {
+                this.coreTemp += change;
+                if (coreTempDir == TemperatureDirection.WARMING_RAPIDLY) {
+                    this.coreTemp = Math.min(this.coreTemp, NORMAL);
+                }
+            }
+            UpdateTemperature.send(serverPlayer.getServer(),serverPlayer,this.coreTemp,this.skinTemp,(float)this.wbgt,this.thirst,sweat);
         }
     }
 
     private static double mcTempToCelsius(float temp) {
         double out = 25.27027027 + (44.86486486 * temp);
         out = (out - 32) * 0.5556;
-        return temp;
+        return out;
     }
 
     public static double mcTempConv(float temp) {
@@ -312,11 +359,12 @@ public class Temperature {
     }
 
     private double getWBGT() {
-        float humidity = this.getBiomeHumidity(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()));
-        float dryTemperature = serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()).value().computeTemperature(serverPlayer.getBlockPos())+getDayNightOffset(serverPlayer.getServerWorld(),getBiomeDayNightOffset(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos())),humidity);
+        float humidity = serverPlayer.getServer().getGameRules().getBoolean(GameRules.DO_WEATHER_CYCLE)?this.getBiomeHumidity(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos())):0F;
+        float dryTemperature = serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()).value().computeTemperature(serverPlayer.getBlockPos().withY(0))+getDayNightOffset(serverPlayer.getServerWorld(),getBiomeDayNightOffset(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos())),humidity);
         double wetTemperature = getHeatIndex(dryTemperature,humidity);
         EnvironmentData data = getInfo();
-        double blackGlobeTemp = (float)getBlackGlobe(data.getRadiation()+getSolarRadiation(serverPlayer.getServerWorld(),serverPlayer.getBlockPos()), dryTemperature, humidity);
+        this.envRadiation = data.getRadiation() + getSolarRadiation(serverPlayer.getServerWorld(), BlockPos.ofFloored(serverPlayer.getCameraPosVec(1.0F)));
+        double blackGlobeTemp = (float)getBlackGlobe(this.envRadiation, dryTemperature, humidity);
         double airTemperature;
         if (data.isSheltered() || data.isUnderground()) {
             airTemperature = (wetTemperature * 0.7F) + (blackGlobeTemp * 0.3F);
@@ -336,7 +384,7 @@ public class Temperature {
         for (int x = -12; x <= 12; x++) {
             for (int z = -12; z <= 12; z++) {
                 if (isSheltered && (x <= 2 && x >= -2) && (z <= 2 && z >= -2)) {
-                    isSheltered = !serverPlayer.getServerWorld().isSkyVisible(BlockPos.ofFloored(serverPlayer.getEyePos()).add(x, 0, z).up());
+                    isSheltered = !serverPlayer.getServerWorld().isSkyVisible(BlockPos.ofFloored(serverPlayer.getCameraPosVec(1.0F)).add(x, 0, z).up());
                 }
                 for (int y = -3; y <= 11; y++) {
                     ChunkPos chunkPos = new ChunkPos((pos.getX() + x) >> 4,(pos.getZ() + z) >> 4);
@@ -355,7 +403,7 @@ public class Temperature {
                     BlockState state = palette.get(blockpos.getX() & 15, blockpos.getY() & 15, blockpos.getZ() & 15);
                     boolean isWater = state.isOf(Blocks.WATER);
                     if (isUnderground && y >= 0 && !isWater) {
-                        isUnderground = !serverPlayer.getServerWorld().isSkyVisible(BlockPos.ofFloored(serverPlayer.getEyePos()).add(x, y, z).up());
+                        isUnderground = !serverPlayer.getServerWorld().isSkyVisible(BlockPos.ofFloored(serverPlayer.getCameraPosVec(1.0F)).add(x, y, z).up());
                     }
                     if ((x <= 5 && x >= -5) && (y <= 5) && (z <= 5 && z >= -5)) {
                         totalBlocks++;
@@ -419,7 +467,7 @@ public class Temperature {
         double parityTempF = mcTempConv(1.108F);
         double extremeTempF = mcTempConv(2.557F);
         double minutes;
-        float radiationModifier = (float) (this.getInfo().getRadiation() / 5000) + 1.0F;
+        float radiationModifier = (float) (0 / 5000) + 1.0F;
         double temp;
 
         if (this.skinTempDir == TemperatureDirection.NONE) return change;
@@ -448,7 +496,7 @@ public class Temperature {
             }
         }
 
-        if ((this.coreTemp < NORMAL && this.getInfo().getRadiation() > 0) || radiationModifier > 5.0F) {
+        if ((this.coreTemp < NORMAL && 0 > 0) || radiationModifier > 5.0F) {
             change = change * radiationModifier;
         }
 
