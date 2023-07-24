@@ -2,6 +2,7 @@ package sh.talonfox.pyrofrost.temperature;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.registry.Registries;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.BiomeTags;
 import net.minecraft.registry.tag.TagKey;
@@ -16,6 +17,7 @@ import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.PalettedContainer;
 import sh.talonfox.pyrofrost.Pyrofrost;
+import sh.talonfox.pyrofrost.network.UpdateTemperature;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,14 +25,120 @@ import java.util.Map;
 public class Temperature {
     private int wetness;
     private float coreTemp = 1.634457832F;
-    private float skinTemp;
+    private float skinTemp = 1.634457832F;
+    private TemperatureDirection skinTempDir = TemperatureDirection.NONE;
     private ServerPlayerEntity serverPlayer;
     private boolean isServerSide;
     private double envRadiation;
     private int ticks = 0;
+    private double wbgt;
     private static HashMap<TagKey<Biome>, Float> temperature = new HashMap<>();
     private static HashMap<TagKey<Biome>, Float> humidity = new HashMap<>();
     private static HashMap<TagKey<Biome>, Float> dayNightOffset = new HashMap<>();
+
+    public static final float LOW = 1.554216868F;
+    public static final float LOW_WARNING3 = 1.572048193F;
+    public static final float LOW_WARNING2 = 1.589879518F;
+    public static final float LOW_WARNING1 = 1.612168675F;
+    public static final float NORMAL = 1.634457832F;
+    public static final float HIGH_WARNING1 = 1.700210844F;
+    public static final float HIGH_WARNING2 = 1.765963856F;
+    public static final float HIGH_WARNING3 = 1.7826807235F;
+    public static final float HIGH = 1.799397591F;
+
+    public enum TemperatureDirection {
+
+        WARMING(0.025F),
+        WARMING_NORMALLY(0.00625F),
+        WARMING_RAPIDLY(0.2F),
+        NONE(0.0F),
+        COOLING(0.0125F),
+        COOLING_NORMALLY(0.00625F),
+        COOLING_RAPIDLY(0.2F);
+
+        public final float coreRate;
+
+        TemperatureDirection(float coreRate) {
+            this.coreRate = coreRate;
+        }
+
+    }
+
+    public static TemperatureDirection getCoreTemperatureDirection(float lastSkinTemperature, float coreTemperature, float skinTemperature) {
+        TemperatureDirection direction = TemperatureDirection.NONE;
+
+        if (lastSkinTemperature > skinTemperature) {
+            direction = TemperatureDirection.COOLING_NORMALLY;
+
+            if (coreTemperature > NORMAL) {
+                if (skinTemperature < coreTemperature) {
+                    direction = TemperatureDirection.COOLING_RAPIDLY;
+                } else {
+                    direction = TemperatureDirection.COOLING;
+                }
+            }
+        }
+        else if (lastSkinTemperature < skinTemperature) {
+            direction = TemperatureDirection.WARMING_NORMALLY;
+
+            if (coreTemperature < NORMAL) {
+                if (skinTemperature > coreTemperature) {
+                    direction = TemperatureDirection.WARMING_RAPIDLY;
+                } else {
+                    direction = TemperatureDirection.WARMING;
+                }
+            }
+        }
+
+        return direction;
+    }
+
+    public static TemperatureDirection getSkinTemperatureDirection(float localTemperature, float lastSkinTemperature) {
+        TemperatureDirection direction = TemperatureDirection.NONE;
+
+        if (lastSkinTemperature > NORMAL) {
+            if (localTemperature > 1.220F) {
+                direction = TemperatureDirection.WARMING_NORMALLY;
+
+                if (localTemperature > 1.888F) {
+                    direction = TemperatureDirection.WARMING;
+                }
+            }
+            else if (localTemperature < 1.888F){
+                direction = TemperatureDirection.COOLING;
+
+                if (localTemperature < 0.997F) {
+                    direction = TemperatureDirection.COOLING_RAPIDLY;
+                }
+            }
+        }
+        else if (lastSkinTemperature < NORMAL) {
+            if (localTemperature > 0.997F) {
+                direction = TemperatureDirection.WARMING_NORMALLY;
+
+                if (localTemperature > 2.557F) {
+                    direction = TemperatureDirection.WARMING_RAPIDLY;
+                }
+                else if (localTemperature > 1.220F) {
+                    direction = TemperatureDirection.WARMING;
+                }
+            }
+            else {
+                direction = TemperatureDirection.COOLING_NORMALLY;
+            }
+        }
+        else {
+            if (localTemperature > 1.220F) {
+                direction = TemperatureDirection.WARMING_NORMALLY;
+            }
+            else if (localTemperature < 0.997F) {
+                direction = TemperatureDirection.COOLING_NORMALLY;
+            }
+        }
+
+        return direction;
+    }
+
 
     public static void initialize() {
         temperature.put(BiomeTags.IS_BADLANDS,1.309F);
@@ -93,14 +201,39 @@ public class Temperature {
 
     public void tick() {
         ticks += 1;
-        if(ticks % 20 == 0) {
-            float humidity = this.getBiomeHumidity(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()));
-            float dryTemperature = serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()).value().computeTemperature(serverPlayer.getBlockPos());
-            float dayNightOffset = getDayNightOffset(serverPlayer.getServerWorld(),getBiomeDayNightOffset(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos())),humidity);
-            Pyrofrost.LOGGER.info("Dry Temperature: "+mcTempConv(dryTemperature+dayNightOffset)+" degrees F");
-            Pyrofrost.LOGGER.info("Relative Humidity: "+humidity+"%");
-            Pyrofrost.LOGGER.info("Core Temperature: "+mcTempConv(coreTemp)+" degrees F");
-            Pyrofrost.LOGGER.info("WGBT: "+getWBGT());
+        if(ticks % 16 == 0 || ticks % 60 == 0) {
+            this.wbgt = getWBGT();
+            this.skinTempDir = getSkinTemperatureDirection((float)this.wbgt, this.skinTemp);
+            float tempChange = getAirTemperatureSkinChange(this.serverPlayer, 0F);
+            if (tempChange > 0.0F) {
+                switch (skinTempDir) {
+                    case COOLING -> {
+                        tempChange = Math.max(-(tempChange) * 70.0F, -(0.022289157F * 3.0F));
+                    }
+                    case COOLING_RAPIDLY -> {
+                        tempChange = Math.max(-(tempChange) * 100.0F, -(0.022289157F * 4.0F));
+                    }
+                    case COOLING_NORMALLY -> {
+                        tempChange = -(tempChange);
+                    }
+                    case WARMING -> {
+                        tempChange = Math.min(tempChange * 70.0F, 0.022289157F * 3.0F);
+                    }
+                    case WARMING_RAPIDLY -> tempChange = Math.min(tempChange * 100.0F, 0.022289157F * 4.0F);
+                    case WARMING_NORMALLY -> {
+                    }
+                }
+            }
+            if (tempChange == 0.0F) {
+                if (this.skinTemp < NORMAL) {
+                    tempChange = (NORMAL - this.skinTemp) / 20.0F;
+                }
+                else if (this.skinTemp > NORMAL) {
+                    tempChange = -((this.skinTemp - NORMAL) / 40.0F);
+                }
+            }
+            this.skinTemp += tempChange;
+            UpdateTemperature.send(serverPlayer.getServer(),serverPlayer,this.coreTemp,this.skinTemp,(float)this.wbgt);
         }
     }
 
@@ -110,7 +243,7 @@ public class Temperature {
         return temp;
     }
 
-    private static double mcTempConv(float temp) {
+    public static double mcTempConv(float temp) {
         return 25.27027027 + (44.86486486 * temp);
     }
 
@@ -182,8 +315,8 @@ public class Temperature {
         float humidity = this.getBiomeHumidity(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()));
         float dryTemperature = serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()).value().computeTemperature(serverPlayer.getBlockPos())+getDayNightOffset(serverPlayer.getServerWorld(),getBiomeDayNightOffset(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos())),humidity);
         double wetTemperature = getHeatIndex(dryTemperature,humidity);
-        double blackGlobeTemp = (float)getBlackGlobe(getSolarRadiation(serverPlayer.getServerWorld(),serverPlayer.getBlockPos()), dryTemperature, humidity);
         EnvironmentData data = getInfo();
+        double blackGlobeTemp = (float)getBlackGlobe(data.getRadiation()+getSolarRadiation(serverPlayer.getServerWorld(),serverPlayer.getBlockPos()), dryTemperature, humidity);
         double airTemperature;
         if (data.isSheltered() || data.isUnderground()) {
             airTemperature = (wetTemperature * 0.7F) + (blackGlobeTemp * 0.3F);
@@ -213,7 +346,7 @@ public class Temperature {
                     BlockPos blockpos = pos.add(x, y, z);
                     PalettedContainer<BlockState> palette;
                     try {
-                        palette = chunk.getSection((blockpos.getY() >> 4) - chunk.getHighestNonEmptySection()).getBlockStateContainer();
+                        palette = chunk.getSection((blockpos.getY() >> 4) - chunk.getBottomSectionCoord()).getBlockStateContainer();
 
                     }
                     catch (Exception e) {
@@ -231,8 +364,9 @@ public class Temperature {
                             waterBlocks++;
                         }
                     }
+                    if (state.isAir()) continue;
                     if(y <= 3) {
-                        Float rad = ThermalRadiation.radiationBlocks.get(new Identifier(state.getBlock().toString()));
+                        Float rad = ThermalRadiation.radiationBlocks.get(Registries.BLOCK.getId(state.getBlock()));
                         if (rad != null) {
                             radiation += rad;
                         }
@@ -276,5 +410,48 @@ public class Temperature {
         }
 
         return offset * humidityOffset;
+    }
+
+    public float getAirTemperatureSkinChange(ServerPlayerEntity sp, double insulationModifier) {
+        float localTemperature = (float)this.wbgt;
+        float change = 0.0F;
+        double localTempF = mcTempConv(localTemperature);
+        double parityTempF = mcTempConv(1.108F);
+        double extremeTempF = mcTempConv(2.557F);
+        double minutes;
+        float radiationModifier = (float) (this.getInfo().getRadiation() / 5000) + 1.0F;
+        double temp;
+
+        if (this.skinTempDir == TemperatureDirection.NONE) return change;
+
+        if (localTemperature < 1.108F) {
+            temp = Math.min(localTempF + insulationModifier, parityTempF);
+
+            if (Math.abs(parityTempF - temp) > 5.0) {
+                minutes = 383.4897 + (12.38784 - 383.4897) / (1 + Math.pow((temp / 43.26779), 8.271186));
+
+                change = (NORMAL - LOW) / (float) minutes;
+            }
+        }
+        else {
+            temp = Math.max(localTempF - insulationModifier, parityTempF);
+
+            if (Math.abs(parityTempF - temp) > 5.0) {
+                // It is really, really hot ... increase rapidly
+                if (temp > extremeTempF) {
+                    change = (float) ((temp - extremeTempF) / 50.0) * 0.0067F;
+                } else {
+                    minutes = 24.45765 + (599.3552 - 24.45765) / (1 + Math.pow((temp / 109.1499), 27.47623));
+
+                    change = (HIGH - NORMAL) / (float) minutes;
+                }
+            }
+        }
+
+        if ((this.coreTemp < NORMAL && this.getInfo().getRadiation() > 0) || radiationModifier > 5.0F) {
+            change = change * radiationModifier;
+        }
+
+        return change;
     }
 }
