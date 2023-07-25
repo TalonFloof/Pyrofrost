@@ -46,7 +46,7 @@ public class TemperatureHud implements HudRenderCallback {
         } else if(PyrofrostClient.localTemp >= 1.220F) { // HIGH
             skinTexX = 20F*4;
         }
-        if(PyrofrostClient.sweat || PyrofrostClient.coreTemp <= Temperature.LOW || PyrofrostClient.coreTemp >= Temperature.HIGH) {
+        if(PyrofrostClient.coreTemp <= Temperature.LOW || PyrofrostClient.coreTemp >= Temperature.HIGH) {
             int offset = ((MinecraftClient.getInstance().world.getTimeOfDay() % 4) < 2) ? -2 : 2;
             drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 8) + offset, drawContext.getScaledWindowHeight() - 56, 16, 16, coreTexX, 0F, 16, 16, 256, 256);
             drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 10) + offset, drawContext.getScaledWindowHeight() - 58, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
@@ -55,7 +55,7 @@ public class TemperatureHud implements HudRenderCallback {
             drawContext.drawTexture(ICONS, (drawContext.getScaledWindowWidth() / 2) - 10, drawContext.getScaledWindowHeight() - 58, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
         }
         for(int i=0; i < 10; i++) {
-            drawContext.drawTexture(ICONS,((drawContext.getScaledWindowWidth() / 2) + 82 - (i * 9) + i),drawContext.getScaledWindowHeight() - 49,7,9,(PyrofrostClient.thirst>i?0F:7F),36F,7,9,256,256);
+            drawContext.drawTexture(ICONS,((drawContext.getScaledWindowWidth() / 2) + 82 - (i * 9) + i),drawContext.getScaledWindowHeight() - 49,7,9,((PyrofrostClient.thirst/2F)>i?0F:7F),36F,7,9,256,256);
         }
     }
 }

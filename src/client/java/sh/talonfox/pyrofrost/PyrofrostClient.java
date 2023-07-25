@@ -9,7 +9,7 @@ public class PyrofrostClient implements ClientModInitializer {
 	public static float coreTemp = 1.634457832F;
 	public static float skinTemp = 1.634457832F;
 	public static float localTemp = 1.108F;
-	public static float thirst = 10F;
+	public static float thirst = 20F;
 	public static boolean sweat = false;
 	@Override
 	public void onInitializeClient() {

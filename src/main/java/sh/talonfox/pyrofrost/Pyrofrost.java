@@ -15,7 +15,7 @@ import java.util.UUID;
 public class Pyrofrost implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("pyrofrost");
 
-	public HashMap<UUID, Temperature> playerTemps = new HashMap<>();
+	public static HashMap<UUID, Temperature> playerTemps = new HashMap<>();
 
 	@Override
 	public void onInitialize() {

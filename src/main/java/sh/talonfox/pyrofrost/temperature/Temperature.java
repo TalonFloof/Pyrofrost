@@ -9,11 +9,14 @@ import net.minecraft.registry.tag.TagKey;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
 import net.minecraft.util.Identifier;
+import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.GameRules;
 import net.minecraft.world.LightType;
+import net.minecraft.world.RaycastContext;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.PalettedContainer;
@@ -25,7 +28,7 @@ import java.util.Map;
 
 public class Temperature {
     private int wetness;
-    private float thirst = 10F;
+    public float thirst = 20F;
     private float coreTemp = 1.634457832F;
     private float skinTemp = 1.634457832F;
     private TemperatureDirection skinTempDir = TemperatureDirection.NONE;
@@ -374,6 +377,21 @@ public class Temperature {
         return airTemperature;
     }
 
+    public static double getDistance(ServerPlayerEntity sp, Vec3d vPos) {
+        double x = Math.max(0, Math.abs(sp.getX() - vPos.x) - sp.getWidth() / 2);
+        double y = Math.max(0, Math.abs((sp.getY() + sp.getHeight() / 2) - vPos.y) - sp.getHeight() / 2);
+        double z = Math.max(0, Math.abs(sp.getZ() - vPos.z) - sp.getWidth() / 2);
+
+        return Math.sqrt(x * x + y * y + z * z);
+    }
+
+    public static boolean isBlockObscured(ServerPlayerEntity sp, Vec3d blockVec) {
+        Vec3d playerVec = new Vec3d(sp.getX(), sp.getEyeY(), sp.getZ());
+        RaycastContext raycastContext = new RaycastContext(playerVec, blockVec, RaycastContext.ShapeType.COLLIDER, RaycastContext.FluidHandling.NONE, sp);
+
+        return sp.getServerWorld().raycast(raycastContext).getType() != HitResult.Type.MISS;
+    }
+
     private EnvironmentData getInfo() {
         boolean isSheltered = true; // So basically me
         boolean isUnderground = true;
@@ -416,7 +434,25 @@ public class Temperature {
                     if(y <= 3) {
                         Float rad = ThermalRadiation.radiationBlocks.get(Registries.BLOCK.getId(state.getBlock()));
                         if (rad != null) {
-                            radiation += rad;
+                            Vec3d vPos = new Vec3d(blockpos.getX() + 0.5, blockpos.getY() + 0.5, blockpos.getZ() + 0.5);
+                            double distance = getDistance(serverPlayer, vPos);
+                            boolean obscured = isBlockObscured(serverPlayer, vPos);
+                            double radi;
+
+                            if (distance <= 1) {
+                                radi = rad;
+                            } else {
+                                radi = rad / distance;
+                            }
+
+                            if (y > 0 && y < 5) {
+                                radi = radi * ((4 - y) * 0.25);
+                            }
+
+                            if (obscured) {
+                                radi = radi * 0.9;
+                            }
+                            radiation += Math.min(radi, rad);
                         }
                     }
                 }
