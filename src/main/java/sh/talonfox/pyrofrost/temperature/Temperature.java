@@ -205,6 +205,8 @@ public class Temperature {
     }
 
     public void tick() {
+        if(serverPlayer.isCreative())
+            return;
         if(ticks % 2 == 0) {
             if (this.coreTemp < LOW) {
                 serverPlayer.setFrozenTicks(serverPlayer.getFrozenTicks() + 5);
@@ -324,7 +326,7 @@ public class Temperature {
     }
 
     private float getBiomeHumidity(RegistryEntry<Biome> biome) {
-        float rainBonus = ((serverPlayer.getServerWorld().hasRain(serverPlayer.getBlockPos().withY(320)) || serverPlayer.getServerWorld().isRaining())?0F:-20F); // We put both conditions to retain compatibility with Enhanced Weather
+        float rainBonus = ((serverPlayer.getServerWorld().hasRain(serverPlayer.getBlockPos().withY(320)))?0F:-20F);
         for(Map.Entry<TagKey<Biome>,Float> entry : humidity.entrySet()) {
             if (biome.isIn(entry.getKey())) {
                 return entry.getValue()+rainBonus;
