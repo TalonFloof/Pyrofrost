@@ -6,6 +6,7 @@ import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sh.talonfox.pyrofrost.registry.ItemRegistry;
 import sh.talonfox.pyrofrost.temperature.Temperature;
 import sh.talonfox.pyrofrost.temperature.ThermalRadiation;
 
@@ -21,6 +22,7 @@ public class Pyrofrost implements ModInitializer {
 	public void onInitialize() {
 		ThermalRadiation.initialize();
 		Temperature.initialize();
+		ItemRegistry.init();
 		LOGGER.info("owo");
 
 		ServerPlayConnectionEvents.JOIN.register((handler, sender, server) -> {

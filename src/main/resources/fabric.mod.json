@@ -3,12 +3,11 @@
 	"id": "pyrofrost",
 	"version": "${version}",
 	"name": "Pyrofrost",
-	"description": "",
+	"description": "A temperature and thirst mod that isn't brutal to the player",
 	"authors": [
 		"TalonFox"
 	],
 	"contact": {
-		"homepage": "https://talonfox.github.io",
 		"sources": "https://github.com/TalonFox/Pyrofrost"
 	},
 	"license": "MIT",

@@ -31,7 +31,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Temperature {
-    private int wetness;
+    private int wetness = 0;
     public float thirst = 20F;
     private float coreTemp = 1.634457832F;
     private float skinTemp = 1.634457832F;
@@ -221,6 +221,8 @@ public class Temperature {
         if(ticks % 60 == 0) {
             if (this.coreTemp > HIGH && this.coreTemp < 2.222891566F) {
                 serverPlayer.damage(new DamageSource(serverPlayer.getServerWorld().getRegistryManager().get(RegistryKeys.DAMAGE_TYPE).getEntry(serverPlayer.getServerWorld().getRegistryManager().get(RegistryKeys.DAMAGE_TYPE).get(new Identifier("pyrofrost","hyperthermia")))),1F);
+            } else if (this.thirst <= 0F && this.coreTemp < 2.222891566F) {
+                serverPlayer.damage(new DamageSource(serverPlayer.getServerWorld().getRegistryManager().get(RegistryKeys.DAMAGE_TYPE).getEntry(serverPlayer.getServerWorld().getRegistryManager().get(RegistryKeys.DAMAGE_TYPE).get(new Identifier("pyrofrost","thirst")))),1F);
             }
         }
         if(ticks % 20 == 0) {
@@ -305,7 +307,7 @@ public class Temperature {
         }
     }
 
-    private static double mcTempToCelsius(float temp) {
+    public static double mcTempToCelsius(float temp) {
         double out = 25.27027027 + (44.86486486 * temp);
         out = (out - 32) * 0.5556;
         return out;
@@ -381,7 +383,7 @@ public class Temperature {
 
     private double getWBGT() {
         float humidity = serverPlayer.getServer().getGameRules().getBoolean(GameRules.DO_WEATHER_CYCLE)?this.getBiomeHumidity(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos())):0F;
-        float dryTemperature = serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()).value().computeTemperature(serverPlayer.getBlockPos().withY(0))+getDayNightOffset(serverPlayer.getServerWorld(),getBiomeDayNightOffset(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos())),humidity);
+        float dryTemperature = getBiomeTemperature(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos()))+getDayNightOffset(serverPlayer.getServerWorld(),getBiomeDayNightOffset(serverPlayer.getServerWorld().getBiome(serverPlayer.getBlockPos())),humidity);
         double wetTemperature = getHeatIndex(dryTemperature,humidity);
         EnvironmentData data = getInfo();
         this.envRadiation = data.getRadiation() + getSolarRadiation(serverPlayer.getServerWorld(), BlockPos.ofFloored(serverPlayer.getCameraPosVec(1.0F)));

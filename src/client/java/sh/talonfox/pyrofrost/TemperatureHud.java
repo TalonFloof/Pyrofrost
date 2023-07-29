@@ -8,6 +8,7 @@ import sh.talonfox.pyrofrost.temperature.Temperature;
 
 public class TemperatureHud implements HudRenderCallback {
     private static final Identifier ICONS = new Identifier("pyrofrost","textures/gui/icons.png");
+    private static final boolean DEBUG = true;
     @Override
     public void onHudRender(DrawContext drawContext, float tickDelta) {
         assert MinecraftClient.getInstance().interactionManager != null;
@@ -62,6 +63,13 @@ public class TemperatureHud implements HudRenderCallback {
             } else {
                 drawContext.drawTexture(ICONS, (drawContext.getScaledWindowWidth() / 2) - 8, drawContext.getScaledWindowHeight() - 56, 16, 16, coreTexX, 0F, 16, 16, 256, 256);
                 drawContext.drawTexture(ICONS, (drawContext.getScaledWindowWidth() / 2) - 10, drawContext.getScaledWindowHeight() - 58, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
+            }
+            if(DEBUG) {
+                drawContext.getMatrices().push();
+                drawContext.getMatrices().scale(0.5F,0.5F,1F);
+                drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,Float.toString((float)Temperature.mcTempConv(PyrofrostClient.localTemp)),drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (65*2)),0xffffffff);
+                drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,Float.toString((float)Temperature.mcTempConv(PyrofrostClient.coreTemp)),drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (48*2)),0xffffffff);
+                drawContext.getMatrices().pop();
             }
             for (int i = 0; i < 10; i++) {
                 drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) + 82 - (i * 9) + i), drawContext.getScaledWindowHeight() - 49, 7, 9, ((PyrofrostClient.thirst / 2F) > i ? 0F : 7F), 36F, 7, 9, 256, 256);
