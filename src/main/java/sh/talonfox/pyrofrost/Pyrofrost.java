@@ -31,5 +31,6 @@ public class Pyrofrost implements ModInitializer {
 				temperature.tick();
 			});
 		});
+
 	}
 }

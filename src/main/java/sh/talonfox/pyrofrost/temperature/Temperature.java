@@ -2,7 +2,11 @@ package sh.talonfox.pyrofrost.temperature;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.entity.damage.DamageSources;
 import net.minecraft.registry.Registries;
+import net.minecraft.registry.RegistryKey;
+import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
 import net.minecraft.registry.tag.BiomeTags;
 import net.minecraft.registry.tag.TagKey;
@@ -209,7 +213,19 @@ public class Temperature {
             return;
         if(ticks % 2 == 0) {
             if (this.coreTemp < LOW) {
-                serverPlayer.setFrozenTicks(serverPlayer.getFrozenTicks() + 5);
+                if(serverPlayer.getFrozenTicks() < 200) {
+                    serverPlayer.setFrozenTicks(serverPlayer.getFrozenTicks() + 5);
+                }
+            }
+        }
+        if(ticks % 60 == 0) {
+            if (this.coreTemp > HIGH && this.coreTemp < 2.222891566F) {
+                serverPlayer.damage(new DamageSource(serverPlayer.getServerWorld().getRegistryManager().get(RegistryKeys.DAMAGE_TYPE).getEntry(serverPlayer.getServerWorld().getRegistryManager().get(RegistryKeys.DAMAGE_TYPE).get(new Identifier("pyrofrost","hyperthermia")))),1F);
+            }
+        }
+        if(ticks % 20 == 0) {
+            if (this.coreTemp >= 2.222891566F) {
+                serverPlayer.damage(new DamageSource(serverPlayer.getServerWorld().getRegistryManager().get(RegistryKeys.DAMAGE_TYPE).getEntry(serverPlayer.getServerWorld().getRegistryManager().get(RegistryKeys.DAMAGE_TYPE).get(new Identifier("pyrofrost","hyperthermia")))),1F);
             }
         }
         ticks += 1;

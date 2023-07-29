@@ -49,7 +49,14 @@ public class TemperatureHud implements HudRenderCallback {
                 skinTexX = 20F * 4;
             }
             if (PyrofrostClient.coreTemp <= Temperature.LOW || PyrofrostClient.coreTemp >= Temperature.HIGH) {
-                int offset = ((MinecraftClient.getInstance().world.getTimeOfDay() % 4) < 2) ? -2 : 2;
+                int offset;
+                if(PyrofrostClient.coreTemp >= 2.222891566F) {
+                    assert MinecraftClient.getInstance().world != null;
+                    offset = ((MinecraftClient.getInstance().world.getTimeOfDay() % 2) < 1) ? -2 : 2;
+                } else {
+                    assert MinecraftClient.getInstance().world != null;
+                    offset = ((MinecraftClient.getInstance().world.getTimeOfDay() % 4) < 2) ? -2 : 2;
+                }
                 drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 8) + offset, drawContext.getScaledWindowHeight() - 56, 16, 16, coreTexX, 0F, 16, 16, 256, 256);
                 drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 10) + offset, drawContext.getScaledWindowHeight() - 58, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
             } else {
