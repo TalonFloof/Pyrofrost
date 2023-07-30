@@ -15,6 +15,7 @@ public class PyrofrostClient implements ClientModInitializer {
 	public static float skinTemp = 1.634457832F;
 	public static float localTemp = 1.108F;
 	public static float rad = 0F;
+	public static int wetness = 0;
 	@Override
 	public void onInitializeClient() {
 		EntityModelLayerRegistry.registerModelLayer(WOLF_FUR_HELMET_LAYER, WolfFurHelmet::getTexturedModelData);

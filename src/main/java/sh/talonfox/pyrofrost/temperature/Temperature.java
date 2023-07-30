@@ -31,6 +31,9 @@ import java.util.Map;
 
 public class Temperature {
     private int wetness = 0;
+    private float moistureLevel = 0F;
+    private boolean isSubmerged = false;
+    private boolean isPartialSubmersion = false;
     private float coreTemp = 1.634457832F;
     private float skinTemp = 1.634457832F;
     private TemperatureDirection skinTempDir = TemperatureDirection.NONE;
@@ -70,6 +73,21 @@ public class Temperature {
             this.coreRate = coreRate;
         }
 
+    }
+
+    public void incMoisture(float amount, int resistance) {
+        float moistureReduction = amount * ((float)resistance / 20F);
+
+        amount = amount - moistureReduction;
+
+        if (moistureLevel > 4.0F) {
+            moistureLevel -= 4.0F;
+            wetness = Math.min(this.wetness + 1, 20 - resistance);
+        }
+
+        if (amount > 0.0F) {
+            moistureLevel = Math.min(this.moistureLevel + amount, 20F);
+        }
     }
 
     public static TemperatureDirection getCoreTemperatureDirection(float lastSkinTemperature, float coreTemperature, float skinTemperature) {
@@ -336,7 +354,7 @@ public class Temperature {
                     this.coreTemp = Math.min(this.coreTemp, NORMAL);
                 }
             }
-            UpdateTemperature.send(serverPlayer.getServer(),serverPlayer,this.coreTemp,this.skinTemp,(float)this.wbgt,(float)this.envRadiation);
+            UpdateTemperature.send(serverPlayer.getServer(),serverPlayer,this.coreTemp,this.skinTemp,(float)this.wbgt,this.wetness,(float)this.envRadiation);
         }
     }
 
@@ -461,6 +479,21 @@ public class Temperature {
         double waterBlocks = 0;
         double totalBlocks = 0;
         double radiation = 0.0;
+        float moisture = 0.0F;
+        this.isPartialSubmersion = !serverPlayer.isSubmergedInWater() && serverPlayer.isTouchingWater() && serverPlayer.isWet();
+        this.isSubmerged = serverPlayer.isSubmergedInWater() && serverPlayer.isTouchingWater() && serverPlayer.isWet();
+        if (isSubmerged) {
+            moisture = 20.0F;
+        }
+        else if (isPartialSubmersion) {
+            moisture = 10.0F;
+        }
+        else if (serverPlayer.isWet()) {
+            moisture = 0.5F;
+        }
+        if (moisture > 0.0F) {
+            incMoisture(moisture,0);
+        }
         BlockPos pos = serverPlayer.getBlockPos();
         for (int x = -12; x <= 12; x++) {
             for (int z = -12; z <= 12; z++) {

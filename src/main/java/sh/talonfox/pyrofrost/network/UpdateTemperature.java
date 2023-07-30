@@ -9,11 +9,12 @@ import net.minecraft.util.Identifier;
 
 public class UpdateTemperature {
     public static Identifier PACKET_ID = new Identifier("pyrofrost","update_temperature_s2c");
-    public static void send(MinecraftServer server, ServerPlayerEntity player, float coreTemperature, float skinTemperature, float localTemperature, float rad) {
+    public static void send(MinecraftServer server, ServerPlayerEntity player, float coreTemperature, float skinTemperature, float localTemperature, int wetness, float rad) {
         PacketByteBuf buf = PacketByteBufs.create();
         buf.writeFloat(coreTemperature);
         buf.writeFloat(skinTemperature);
         buf.writeFloat(localTemperature);
+        buf.writeInt(wetness);
         buf.writeFloat(rad);
         ServerPlayNetworking.send(player, PACKET_ID, buf);
     }

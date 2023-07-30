@@ -1,13 +1,16 @@
 package sh.talonfox.pyrofrost;
 
+import com.mojang.blaze3d.systems.RenderSystem;
 import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
+import net.minecraft.client.render.*;
 import net.minecraft.util.Identifier;
 import sh.talonfox.pyrofrost.temperature.Temperature;
 
 public class TemperatureHud implements HudRenderCallback {
     private static final Identifier ICONS = new Identifier("pyrofrost","textures/gui/icons.png");
+    private static final Identifier WET_OVERLAY = new Identifier("pyrofrost","textures/gui/wetness_overlay.png");
     private static final boolean DEBUG = true;
     private static long frame = 0;
     @Override
@@ -72,6 +75,32 @@ public class TemperatureHud implements HudRenderCallback {
                 drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,String.format("%.1f°F",Temperature.mcTempConv(PyrofrostClient.localTemp)),drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (65*2)),0xffffffff);
                 drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,String.format("%.1f°F",Temperature.mcTempConv(PyrofrostClient.coreTemp)),drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (50*2)),0xffffffff);
                 drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer, ((int)PyrofrostClient.rad) + " K",drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (70*2)),0xffffffff);
+                drawContext.getMatrices().pop();
+            }
+            if(PyrofrostClient.wetness > 0) {
+                Tessellator tessellator = Tessellator.getInstance();
+                BufferBuilder bufferbuilder = tessellator.getBuffer();
+                double width = drawContext.getScaledWindowWidth();
+                double height = drawContext.getScaledWindowHeight();
+
+                drawContext.getMatrices().push();
+                RenderSystem.disableDepthTest();
+                RenderSystem.depthMask(false);
+                RenderSystem.enableBlend();
+                RenderSystem.defaultBlendFunc();
+                RenderSystem.setShader(GameRenderer::getPositionTexProgram);
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, ((float)PyrofrostClient.wetness)/20F);
+                RenderSystem.setShaderTexture(0, WET_OVERLAY);
+                bufferbuilder.begin(VertexFormat.DrawMode.QUADS, VertexFormats.POSITION_TEXTURE);
+                bufferbuilder.vertex(0.0D, height, -90.0D).texture(0.0F, 1.0F).next();
+                bufferbuilder.vertex(width, height, -90.0D).texture(1.0F, 1.0F).next();
+                bufferbuilder.vertex(width, 0.0D, -90.0D).texture(1.0F, 0.0F).next();
+                bufferbuilder.vertex(0.0D, 0.0D, -90.0D).texture(0.0F, 0.0F).next();
+                tessellator.draw();
+                RenderSystem.depthMask(true);
+                RenderSystem.enableDepthTest();
+                RenderSystem.setShaderColor(1.0F, 1.0F, 1.0F, 1.0F);
+                RenderSystem.disableBlend();
                 drawContext.getMatrices().pop();
             }
         }
