@@ -9,8 +9,10 @@ import sh.talonfox.pyrofrost.temperature.Temperature;
 public class TemperatureHud implements HudRenderCallback {
     private static final Identifier ICONS = new Identifier("pyrofrost","textures/gui/icons.png");
     private static final boolean DEBUG = true;
+    private static long frame = 0;
     @Override
     public void onHudRender(DrawContext drawContext, float tickDelta) {
+        frame += 1;
         assert MinecraftClient.getInstance().interactionManager != null;
         if(MinecraftClient.getInstance().interactionManager.hasStatusBars()) {
             float coreTexX = 0F;
@@ -50,16 +52,16 @@ public class TemperatureHud implements HudRenderCallback {
                 skinTexX = 20F * 4;
             }
             if (PyrofrostClient.coreTemp <= Temperature.LOW || PyrofrostClient.coreTemp >= Temperature.HIGH) {
-                int offset;
+                int offset = 0;
+                assert MinecraftClient.getInstance().world != null;
                 if(PyrofrostClient.coreTemp >= 2.222891566F) {
-                    assert MinecraftClient.getInstance().world != null;
-                    offset = ((MinecraftClient.getInstance().world.getTimeOfDay() % 2) < 1) ? -2 : 2;
+                    offset = ((frame % 8) < 4) ? -2 : 2;
                 } else {
-                    assert MinecraftClient.getInstance().world != null;
-                    offset = ((MinecraftClient.getInstance().world.getTimeOfDay() % 4) < 2) ? -2 : 2;
+                    offset = ((frame % 16) < 8) ? -2 : 2;
                 }
                 drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 8) + offset, drawContext.getScaledWindowHeight() - 56, 16, 16, coreTexX, 0F, 16, 16, 256, 256);
                 drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 10) + offset, drawContext.getScaledWindowHeight() - 58, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
+
             } else {
                 drawContext.drawTexture(ICONS, (drawContext.getScaledWindowWidth() / 2) - 8, drawContext.getScaledWindowHeight() - 56, 16, 16, coreTexX, 0F, 16, 16, 256, 256);
                 drawContext.drawTexture(ICONS, (drawContext.getScaledWindowWidth() / 2) - 10, drawContext.getScaledWindowHeight() - 58, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
@@ -67,12 +69,10 @@ public class TemperatureHud implements HudRenderCallback {
             if(DEBUG) {
                 drawContext.getMatrices().push();
                 drawContext.getMatrices().scale(0.5F,0.5F,1F);
-                drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,Float.toString((float)Temperature.mcTempConv(PyrofrostClient.localTemp)),drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (65*2)),0xffffffff);
-                drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,Float.toString((float)Temperature.mcTempConv(PyrofrostClient.coreTemp)),drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (48*2)),0xffffffff);
+                drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,String.format("%.1f°F",Temperature.mcTempConv(PyrofrostClient.localTemp)),drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (65*2)),0xffffffff);
+                drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,String.format("%.1f°F",Temperature.mcTempConv(PyrofrostClient.coreTemp)),drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (50*2)),0xffffffff);
+                drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer, ((int)PyrofrostClient.rad) + " K",drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (70*2)),0xffffffff);
                 drawContext.getMatrices().pop();
-            }
-            for (int i = 0; i < 10; i++) {
-                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) + 82 - (i * 9) + i), drawContext.getScaledWindowHeight() - 49, 7, 9, ((PyrofrostClient.thirst / 2F) > i ? 0F : 7F), 36F, 7, 9, 256, 256);
             }
         }
     }

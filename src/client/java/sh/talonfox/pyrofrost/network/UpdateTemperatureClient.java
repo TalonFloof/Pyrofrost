@@ -15,7 +15,6 @@ public class UpdateTemperatureClient {
         PyrofrostClient.coreTemp = packetByteBuf.readFloat();
         PyrofrostClient.skinTemp = packetByteBuf.readFloat();
         PyrofrostClient.localTemp = packetByteBuf.readFloat();
-        PyrofrostClient.thirst = packetByteBuf.readFloat();
-        PyrofrostClient.sweat = packetByteBuf.readBoolean();
+        PyrofrostClient.rad = packetByteBuf.readFloat();
     }
 }

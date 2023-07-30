@@ -3,7 +3,7 @@
 	"id": "pyrofrost",
 	"version": "${version}",
 	"name": "Pyrofrost",
-	"description": "A temperature and thirst mod that isn't brutal to the player",
+	"description": "A temperature mod that isn't brutal to the player",
 	"authors": [
 		"TalonFox"
 	],
@@ -19,6 +19,9 @@
 		],
 		"client": [
 			"sh.talonfox.pyrofrost.PyrofrostClient"
+		],
+		"dehydration": [
+			"sh.talonfox.pyrofrost.modcompat.DehydrationCompat"
 		]
 	},
 	"mixins": [
