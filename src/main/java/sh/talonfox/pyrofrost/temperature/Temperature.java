@@ -2,7 +2,9 @@ package sh.talonfox.pyrofrost.temperature;
 
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Blocks;
+import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.damage.DamageSource;
+import net.minecraft.item.ItemStack;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -25,6 +27,7 @@ import net.minecraft.world.chunk.PalettedContainer;
 import sh.talonfox.pyrofrost.Pyrofrost;
 import sh.talonfox.pyrofrost.modcompat.ModCompatManager;
 import sh.talonfox.pyrofrost.network.UpdateTemperature;
+import sh.talonfox.pyrofrost.registry.ItemRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -282,7 +285,8 @@ public class Temperature {
         if(ticks % 16 == 0 || ticks % 60 == 0) {
             this.wbgt = getWBGT();
             this.skinTempDir = getSkinTemperatureDirection((float)this.wbgt, this.skinTemp);
-            float tempChange = getAirTemperatureSkinChange(this.serverPlayer, this.wbgt < 0.997F ? 4.3F*3F : 0F);
+            double insulationModifier = getInsulationModifier(serverPlayer, wetness, skinTempDir, (float)wbgt);
+            float tempChange = getAirTemperatureSkinChange(this.serverPlayer, insulationModifier);
             if (tempChange > 0.0F) {
                 switch (skinTempDir) {
                     case COOLING -> {
@@ -592,6 +596,72 @@ public class Temperature {
         return offset * humidityOffset;
     }
 
+    private static double getInsulationModifier(double coldBase, ItemStack armor, double wetnessModifier, float lTemperature) {
+        double modifier;
+        double armorModifier = !armor.isEmpty() ? 3.0 : 0.0;
+        boolean isCold = lTemperature < 0.997F;
+        boolean isWarm = lTemperature > 1.220F;
+
+        if (isCold) {
+            modifier = coldBase + armorModifier;
+        }
+        else {
+            // Don't include coldBase if warm
+            modifier = armorModifier;
+
+            // Increase base armor insulation effectiveness if wet
+            if (isWarm && wetnessModifier != -1) {
+                if (armorModifier != 0.0) {
+                    modifier = armorModifier * (1.0 + wetnessModifier);
+                }
+                else {
+                    modifier = coldBase * wetnessModifier;
+                }
+            }
+        }
+
+        // Add modifier for any armor type
+        if (armorModifier != 0.0) {
+            if (armor.isOf(ItemRegistry.WOLF_FUR_HELMET) || armor.isOf(ItemRegistry.WOLF_FUR_CHESTPLATE) || armor.isOf(ItemRegistry.WOLF_FUR_LEGGINGS) || armor.isOf(ItemRegistry.WOLF_FUR_PAWS)) {
+                if (isCold) {
+                    modifier += 16.0;
+                }
+
+                if (isCold && wetnessModifier != -1) {
+                    modifier = modifier * (wetnessModifier / 2.0);
+                }
+            }
+        }
+        else if (wetnessModifier != -1 && isCold) {
+            modifier = modifier * wetnessModifier;
+        }
+
+        return modifier;
+    }
+
+    public static double getInsulationModifier(ServerPlayerEntity sp, int wetness, TemperatureDirection direction, float lTemperature) {
+        double modifier = 0.0;
+        double wetnessModifier = -1;
+
+        if (wetness > 0) {
+            if (lTemperature < 1.220F) {
+                wetnessModifier = 1.0 - (wetness / 20.0);
+            } else {
+                wetnessModifier = wetness / 20.0;
+            }
+        }
+
+        if (direction != TemperatureDirection.WARMING_RAPIDLY && direction != TemperatureDirection.COOLING_RAPIDLY) {
+            modifier += getInsulationModifier(0.0, sp.getEquippedStack(EquipmentSlot.HEAD), wetnessModifier, lTemperature);
+            modifier += getInsulationModifier(4.3, sp.getEquippedStack(EquipmentSlot.CHEST), wetnessModifier, lTemperature);
+            modifier += getInsulationModifier(4.3, sp.getEquippedStack(EquipmentSlot.LEGS), wetnessModifier, lTemperature);
+            modifier += getInsulationModifier(4.3, sp.getEquippedStack(EquipmentSlot.FEET), wetnessModifier, lTemperature);
+        }
+
+        return modifier;
+    }
+
+
     public float getAirTemperatureSkinChange(ServerPlayerEntity sp, double insulationModifier) {
         float localTemperature = (float)this.wbgt;
         float change = 0.0F;
@@ -600,7 +670,25 @@ public class Temperature {
         double extremeTempF = mcTempConv(2.557F);
         double minutes;
         float radiationModifier = (float) (this.envRadiation / 5000) + 1.0F;
+        float moisture = 0.0F;
         double temp;
+
+        if (!serverPlayer.isWet()) {
+            moisture = 0.2F * (3.0F + radiationModifier);
+        }
+
+        if (moisture > 0.0F) {
+            if (this.moistureLevel < -4.0F) {
+                moistureLevel += 4.0F;
+                wetness = Math.max(wetness - 1, 0);
+            }
+            if (this.wetness > 0) {
+                this.moistureLevel = Math.max(this.moistureLevel - moisture, -20F);
+            }
+            else {
+                this.moistureLevel = 0.0F;
+            }
+        }
 
         if (this.skinTempDir == TemperatureDirection.NONE) return change;
 
