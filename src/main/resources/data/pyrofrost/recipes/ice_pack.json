@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " b ",
+    "aca",
+    " a "
+  ],
+  "key": {
+    "a": {
+      "item": "pyrofrost:wolf_pelt"
+    },
+    "b": {
+      "item": "minecraft:iron_ingot"
+    },
+    "c": {
+      "tag": "pyrofrost:ice"
+    }
+  },
+  "result": {
+    "item": "pyrofrost:ice_pack"
+  }
+}

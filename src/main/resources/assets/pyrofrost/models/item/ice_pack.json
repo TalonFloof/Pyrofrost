@@ -1,0 +1,26 @@
+{
+  "parent": "item/generated",
+  "textures": {
+    "layer0": "pyrofrost:item/ice_pack_full"
+  },
+  "overrides": [
+    {
+      "predicate": {
+        "percent_used": 0.3
+      },
+      "model": "pyrofrost:item/ice_pack_melt"
+    },
+    {
+      "predicate": {
+        "percent_used": 0.7
+      },
+      "model": "pyrofrost:item/ice_pack_low"
+    },
+    {
+      "predicate": {
+        "percent_used": 0.95
+      },
+      "model": "pyrofrost:item/ice_pack_empty"
+    }
+  ]
+}

@@ -13,6 +13,7 @@ import net.minecraft.loot.provider.number.BinomialLootNumberProvider;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
+import sh.talonfox.pyrofrost.items.IcePack;
 import sh.talonfox.pyrofrost.items.Thermometor;
 import sh.talonfox.pyrofrost.items.WolfFurArmor;
 import sh.talonfox.pyrofrost.items.WolfPelt;
@@ -20,6 +21,7 @@ import sh.talonfox.pyrofrost.items.WolfPelt;
 public class ItemRegistry {
     public static final Thermometor THERMOMETOR_ITEM = new Thermometor(new FabricItemSettings());
     public static final WolfPelt WOLF_PELT_ITEM = new WolfPelt(new FabricItemSettings());
+    public static final IcePack ICE_PACK_ITEM = new IcePack(new FabricItemSettings().maxDamage(120));
     public static final ArmorMaterial WOLF_FUR_ARMOR = new WolfFurArmor();
     public static final Item WOLF_FUR_HELMET = new ArmorItem(WOLF_FUR_ARMOR, ArmorItem.Type.HELMET, new Item.Settings());
     public static final Item WOLF_FUR_CHESTPLATE = new ArmorItem(WOLF_FUR_ARMOR, ArmorItem.Type.CHESTPLATE, new Item.Settings());
@@ -28,6 +30,7 @@ public class ItemRegistry {
 
     public static void init() {
         Registry.register(Registries.ITEM,new Identifier("pyrofrost","thermometor"),THERMOMETOR_ITEM);
+        Registry.register(Registries.ITEM,new Identifier("pyrofrost","ice_pack"),ICE_PACK_ITEM);
         Registry.register(Registries.ITEM,new Identifier("pyrofrost","wolf_pelt"),WOLF_PELT_ITEM);
         Registry.register(Registries.ITEM,new Identifier("pyrofrost","wolf_fur_helmet"),WOLF_FUR_HELMET);
         Registry.register(Registries.ITEM,new Identifier("pyrofrost","wolf_fur_chestplate"),WOLF_FUR_CHESTPLATE);
@@ -35,6 +38,7 @@ public class ItemRegistry {
         Registry.register(Registries.ITEM,new Identifier("pyrofrost","wolf_fur_paws"),WOLF_FUR_PAWS);
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.TOOLS).register(content -> {
             content.add(THERMOMETOR_ITEM);
+            content.add(ICE_PACK_ITEM);
         });
         ItemGroupEvents.modifyEntriesEvent(ItemGroups.INGREDIENTS).register(content -> {
             content.add(WOLF_PELT_ITEM);

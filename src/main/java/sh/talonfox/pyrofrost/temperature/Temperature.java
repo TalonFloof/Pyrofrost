@@ -5,6 +5,7 @@ import net.minecraft.block.Blocks;
 import net.minecraft.entity.EquipmentSlot;
 import net.minecraft.entity.damage.DamageSource;
 import net.minecraft.item.ItemStack;
+import net.minecraft.item.Items;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.RegistryKeys;
 import net.minecraft.registry.entry.RegistryEntry;
@@ -25,13 +26,15 @@ import net.minecraft.world.RaycastContext;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.PalettedContainer;
-import sh.talonfox.pyrofrost.Pyrofrost;
 import sh.talonfox.pyrofrost.modcompat.ModCompatManager;
 import sh.talonfox.pyrofrost.network.UpdateTemperature;
 import sh.talonfox.pyrofrost.registry.ItemRegistry;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static java.lang.Double.NaN;
 
 public class Temperature {
     public int wetness = 0;
@@ -469,6 +472,14 @@ public class Temperature {
         } else {
             airTemperature = (wetTemperature * 0.7F) + (blackGlobeTemp * 0.2F) + (dryTemperature * 0.1F);
         }
+        if(serverPlayer.getOffHandStack().isOf(ItemRegistry.ICE_PACK_ITEM)) {
+            if(serverPlayer.getOffHandStack().getDamage() < serverPlayer.getOffHandStack().getMaxDamage() - 1) {
+                airTemperature = airTemperature * 0.6F;
+                if(ticks % 60 == 0) {
+                    serverPlayer.getOffHandStack().setDamage(serverPlayer.getOffHandStack().getDamage() + 1);
+                }
+            }
+        }
         return airTemperature;
     }
 
@@ -508,6 +519,12 @@ public class Temperature {
         if (moisture > 0.0F) {
             incMoisture(moisture,0);
         }
+        AtomicReference<Float> radReduction = new AtomicReference<>(1.0F);
+        serverPlayer.getArmorItems().forEach(armor -> {
+            if (armor.isOf(Items.NETHERITE_HELMET) || armor.isOf(Items.NETHERITE_CHESTPLATE) || armor.isOf(Items.NETHERITE_LEGGINGS) || armor.isOf(Items.NETHERITE_BOOTS)) {
+                radReduction.updateAndGet(v -> new Float((float) (v - 0.2F)));
+            }
+        });
         BlockPos pos = serverPlayer.getBlockPos();
         for (int x = -12; x <= 12; x++) {
             for (int z = -12; z <= 12; z++) {
@@ -553,27 +570,40 @@ public class Temperature {
                                 double distance = getDistance(serverPlayer, vPos);
                                 boolean obscured = isBlockObscured(serverPlayer, vPos);
                                 double radi;
+                                double amount = NaN;
+                                if (!state.getFluidState().isEmpty()) {
+                                    amount = (double) state.getFluidState().getLevel() / 8;
+                                }
+                                if (!Double.isNaN(amount) && amount <= 0.0F) {
 
-                                if (distance <= 1) {
-                                    radi = rad;
                                 } else {
-                                    radi = rad / distance;
-                                }
+                                    if (distance <= 1) {
+                                        radi = rad;
+                                    } else {
+                                        if (!Double.isNaN(amount)) {
+                                            radi = rad * amount / distance;
+                                        } else {
+                                            radi = rad / distance;
+                                        }
+                                    }
 
-                                if (y > 0 && y < 5) {
-                                    radi = radi * ((4 - y) * 0.25);
-                                }
+                                    if (y > 0 && y < 5) {
+                                        radi = radi * ((4 - y) * 0.25);
+                                    }
 
-                                if (obscured) {
-                                    radi = radi * 0.9;
+                                    if (obscured) {
+                                        radi = radi * 0.9;
+                                    }
+
+                                    radiation += Math.min(radi, rad);
                                 }
-                                radiation += Math.min(radi, rad);
                             }
                         }
                     }
                 }
             }
         }
+        radiation = radiation * radReduction.get();
         return new EnvironmentData(isUnderground,isSheltered,radiation);
     }
 
@@ -645,6 +675,11 @@ public class Temperature {
 
                 if (isCold && wetnessModifier != -1) {
                     modifier = modifier * (wetnessModifier / 2.0);
+                }
+            }
+            if (armor.isOf(Items.NETHERITE_HELMET) || armor.isOf(Items.NETHERITE_CHESTPLATE) || armor.isOf(Items.NETHERITE_LEGGINGS) || armor.isOf(Items.NETHERITE_BOOTS)) {
+                if(!isCold) {
+                    modifier += 8.0;
                 }
             }
         }

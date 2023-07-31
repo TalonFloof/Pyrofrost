@@ -1,0 +1,14 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "pyrofrost:ice_pack"
+    },
+    {
+      "tag": "pyrofrost:ice"
+    }
+  ],
+  "result": {
+    "item": "pyrofrost:ice_pack"
+  }
+}

@@ -5,7 +5,9 @@ import net.fabricmc.fabric.api.client.rendering.v1.HudRenderCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.render.*;
+import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.util.Identifier;
+import sh.talonfox.pyrofrost.registry.ItemRegistry;
 import sh.talonfox.pyrofrost.temperature.Temperature;
 
 public class TemperatureHud implements HudRenderCallback {
@@ -73,13 +75,14 @@ public class TemperatureHud implements HudRenderCallback {
                 drawContext.drawTexture(ICONS, (drawContext.getScaledWindowWidth() / 2) - 8, drawContext.getScaledWindowHeight() - 56, 16, 16, coreTexX, 0F, 16, 16, 256, 256);
                 drawContext.drawTexture(ICONS, (drawContext.getScaledWindowWidth() / 2) - 10, drawContext.getScaledWindowHeight() - 58, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
             }
-            if(DEBUG) {
-                drawContext.getMatrices().push();
-                drawContext.getMatrices().scale(0.5F,0.5F,1F);
-                drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,String.format("%.1f°F",Temperature.mcTempConv(PyrofrostClient.localTemp)),drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (65*2)),0xffffffff);
-                drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,String.format("%.1f°F",Temperature.mcTempConv(PyrofrostClient.coreTemp)),drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (50*2)),0xffffffff);
-                drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer, ((int)PyrofrostClient.rad) + " K",drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (70*2)),0xffffffff);
-                drawContext.getMatrices().pop();
+            for(int i = 0; i < 9; i++) {
+                if(MinecraftClient.getInstance().player.getInventory().main.get(i).getItem() == ItemRegistry.THERMOMETOR_ITEM) {
+                    drawContext.getMatrices().push();
+                    drawContext.getMatrices().scale(0.5F,0.5F,1F);
+                    drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,String.format("%.1f°F",Temperature.mcTempConv(PyrofrostClient.localTemp)),drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (65*2)),0xffffffff);
+                    drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,String.format("%.1f°F",Temperature.mcTempConv(PyrofrostClient.coreTemp)),drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (50*2)),0xffffffff);
+                    drawContext.getMatrices().pop();
+                }
             }
             if(PyrofrostClient.wetness > 0) {
                 Tessellator tessellator = Tessellator.getInstance();
