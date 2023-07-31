@@ -33,12 +33,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class Temperature {
-    private int wetness = 0;
-    private float moistureLevel = 0F;
+    public int wetness = 0;
+    public float moistureLevel = 0F;
     private boolean isSubmerged = false;
     private boolean isPartialSubmersion = false;
-    private float coreTemp = 1.634457832F;
-    private float skinTemp = 1.634457832F;
+    public float coreTemp = 1.634457832F;
+    public float skinTemp = 1.634457832F;
     private TemperatureDirection skinTempDir = TemperatureDirection.NONE;
     private ServerPlayerEntity serverPlayer;
     private boolean isServerSide;
@@ -286,22 +286,31 @@ public class Temperature {
             this.wbgt = getWBGT();
             this.skinTempDir = getSkinTemperatureDirection((float)this.wbgt, this.skinTemp);
             double insulationModifier = getInsulationModifier(serverPlayer, wetness, skinTempDir, (float)wbgt);
+            boolean canSweat = skinTemp >= NORMAL && wetness == 0;
             float tempChange = getAirTemperatureSkinChange(this.serverPlayer, insulationModifier);
             if (tempChange > 0.0F) {
                 switch (skinTempDir) {
                     case COOLING -> {
                         tempChange = Math.max(-(tempChange) * 70.0F, -(0.022289157F * 3.0F));
+                        if (wetness > 0) {
+                            tempChange = tempChange * (float) (1.0 + (this.wetness / 20.0));
+                        }
                     }
                     case COOLING_RAPIDLY -> {
                         tempChange = Math.max(-(tempChange) * 100.0F, -(0.022289157F * 4.0F));
+                        if (this.wetness > 0) {
+                            tempChange = tempChange * (float) (2.0 + (this.wetness / 20.0));
+                        }
                     }
                     case COOLING_NORMALLY -> {
                         tempChange = -(tempChange);
-                        float exhaustion = Math.abs(Math.min(tempChange * 200.0F, 0.2F));
-                        serverPlayer.getHungerManager().addExhaustion(exhaustion);
+                        if(!canSweat) {
+                            float exhaustion = Math.abs(Math.min(tempChange * 200.0F, 0.2F));
+                            serverPlayer.getHungerManager().addExhaustion(exhaustion);
+                        }
                     }
                     case WARMING -> {
-                        if(ModCompatManager.isModAvailable("dehydration")) {
+                        if(canSweat && ModCompatManager.isModAvailable("dehydration")) {
                             if (!(boolean)ModCompatManager.runMethod("dehydration","sweat",this.serverPlayer, Math.min(tempChange * 150.0F, 0.3F))) {
                                 tempChange = Math.min(tempChange * 70.0F, 0.022289157F * 3.0F);
                             }
@@ -309,7 +318,7 @@ public class Temperature {
                     }
                     case WARMING_RAPIDLY -> tempChange = Math.min(tempChange * 100.0F, 0.022289157F * 4.0F);
                     case WARMING_NORMALLY -> {
-                        if(ModCompatManager.isModAvailable("dehydration")) {
+                        if(canSweat && ModCompatManager.isModAvailable("dehydration")) {
                             ModCompatManager.runMethod("dehydration","sweat",this.serverPlayer,Math.min(tempChange * 100.0F, 0.1F));
                         }
                     }
@@ -326,7 +335,7 @@ public class Temperature {
             var oldSkinTemp = this.skinTemp;
             if (this.skinTemp > NORMAL && this.skinTemp > oldSkinTemp && this.wbgt < this.skinTemp) {
                 float coolingRate = Math.max((this.skinTemp - NORMAL) / 20.0F, 0.022289157F);
-                if(ModCompatManager.isModAvailable("dehydration")) {
+                if(canSweat && ModCompatManager.isModAvailable("dehydration")) {
                     if(wetness == 0 && (boolean)ModCompatManager.runMethod("dehydration","sweat",this.serverPlayer, 0F)) {
                         ModCompatManager.runMethod("dehydration","sweat",this.serverPlayer, Math.min(tempChange * 150.0F, 0.2F));
                         this.skinTemp = Math.max(this.skinTemp - coolingRate, NORMAL);
@@ -399,7 +408,7 @@ public class Temperature {
     }
 
     private float getBiomeHumidity(RegistryEntry<Biome> biome) {
-        float rainBonus = ((serverPlayer.getServerWorld().hasRain(serverPlayer.getBlockPos().withY(320)))?0F:-20F);
+        float rainBonus = (((serverPlayer.getServerWorld().hasRain(serverPlayer.getBlockPos().withY(320)))||(serverPlayer.getServerWorld().isRaining()))?0F:-20F);
         for(Map.Entry<TagKey<Biome>,Float> entry : humidity.entrySet()) {
             if (biome.isIn(entry.getKey())) {
                 return entry.getValue()+rainBonus;
@@ -624,7 +633,7 @@ public class Temperature {
         if (armorModifier != 0.0) {
             if (armor.isOf(ItemRegistry.WOLF_FUR_HELMET) || armor.isOf(ItemRegistry.WOLF_FUR_CHESTPLATE) || armor.isOf(ItemRegistry.WOLF_FUR_LEGGINGS) || armor.isOf(ItemRegistry.WOLF_FUR_PAWS)) {
                 if (isCold) {
-                    modifier += 16.0;
+                    modifier += 4.0;
                 }
 
                 if (isCold && wetnessModifier != -1) {

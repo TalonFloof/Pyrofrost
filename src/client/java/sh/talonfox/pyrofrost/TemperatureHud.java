@@ -15,6 +15,10 @@ public class TemperatureHud implements HudRenderCallback {
     private static long frame = 0;
     @Override
     public void onHudRender(DrawContext drawContext, float tickDelta) {
+        RenderSystem.enableBlend();
+        RenderSystem.defaultBlendFunc();
+        RenderSystem.depthMask(true);
+        RenderSystem.enableDepthTest();
         frame += 1;
         assert MinecraftClient.getInstance().interactionManager != null;
         if(MinecraftClient.getInstance().interactionManager.hasStatusBars()) {
@@ -103,6 +107,7 @@ public class TemperatureHud implements HudRenderCallback {
                 RenderSystem.disableBlend();
                 drawContext.getMatrices().pop();
             }
+            RenderSystem.disableBlend();
         }
     }
 }

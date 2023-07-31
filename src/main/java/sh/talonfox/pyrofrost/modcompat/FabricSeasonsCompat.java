@@ -24,7 +24,8 @@ public class FabricSeasonsCompat {
         if(time == Long.MAX_VALUE) {
             return 1+(season.ordinal()*3);
         } else {
-            return (season.ordinal()*3)+(int)Math.round(((double)(timeLen-time))/((double)timeLen/3));
+            Pyrofrost.LOGGER.info(String.valueOf((season.ordinal()*3)+(int)Math.floor(((double)(timeLen-time))/((double)timeLen/3))));
+            return (season.ordinal()*3)+(int)Math.floor(((double)(timeLen-time))/((double)timeLen/3));
         }
     }
 }
