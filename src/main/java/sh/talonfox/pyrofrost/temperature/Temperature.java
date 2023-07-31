@@ -12,6 +12,7 @@ import net.minecraft.registry.tag.BiomeTags;
 import net.minecraft.registry.tag.TagKey;
 import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.server.world.ServerWorld;
+import net.minecraft.state.property.Properties;
 import net.minecraft.util.Identifier;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.util.math.BlockPos;
@@ -543,25 +544,31 @@ public class Temperature {
                     if(y <= 3) {
                         Float rad = ThermalRadiation.radiationBlocks.get(Registries.BLOCK.getId(state.getBlock()));
                         if (rad != null) {
-                            Vec3d vPos = new Vec3d(blockpos.getX() + 0.5, blockpos.getY() + 0.5, blockpos.getZ() + 0.5);
-                            double distance = getDistance(serverPlayer, vPos);
-                            boolean obscured = isBlockObscured(serverPlayer, vPos);
-                            double radi;
-
-                            if (distance <= 1) {
-                                radi = rad;
-                            } else {
-                                radi = rad / distance;
+                            boolean emitting = true;
+                            if (state.contains(Properties.LIT)) {
+                                emitting = state.get(Properties.LIT);
                             }
+                            if(emitting) {
+                                Vec3d vPos = new Vec3d(blockpos.getX() + 0.5, blockpos.getY() + 0.5, blockpos.getZ() + 0.5);
+                                double distance = getDistance(serverPlayer, vPos);
+                                boolean obscured = isBlockObscured(serverPlayer, vPos);
+                                double radi;
 
-                            if (y > 0 && y < 5) {
-                                radi = radi * ((4 - y) * 0.25);
-                            }
+                                if (distance <= 1) {
+                                    radi = rad;
+                                } else {
+                                    radi = rad / distance;
+                                }
 
-                            if (obscured) {
-                                radi = radi * 0.9;
+                                if (y > 0 && y < 5) {
+                                    radi = radi * ((4 - y) * 0.25);
+                                }
+
+                                if (obscured) {
+                                    radi = radi * 0.9;
+                                }
+                                radiation += Math.min(radi, rad);
                             }
-                            radiation += Math.min(radi, rad);
                         }
                     }
                 }

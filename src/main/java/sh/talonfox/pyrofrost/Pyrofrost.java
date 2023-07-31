@@ -17,6 +17,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sh.talonfox.pyrofrost.modcompat.ModCompatManager;
 import sh.talonfox.pyrofrost.registry.ItemRegistry;
+import sh.talonfox.pyrofrost.registry.ResourceManagerRegistry;
 import sh.talonfox.pyrofrost.temperature.Temperature;
 import sh.talonfox.pyrofrost.temperature.ThermalRadiation;
 import net.minecraft.server.MinecraftServer;
@@ -83,11 +84,11 @@ public class Pyrofrost implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
-		ThermalRadiation.initialize();
 		Temperature.initialize();
 		ModCompatManager.init();
 		ItemRegistry.init();
-		LOGGER.info("owo");
+		ResourceManagerRegistry.init();
+		Pyrofrost.LOGGER.info("A strange new sensation sweeps across the blocky hills of Minecraft...");
 
 		ServerLifecycleEvents.SERVER_STARTING.register(Pyrofrost::loadTemperatureData);
 		ServerLifecycleEvents.SERVER_STOPPING.register(Pyrofrost::saveTemperatureData);

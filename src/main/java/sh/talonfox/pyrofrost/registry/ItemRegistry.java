@@ -2,10 +2,14 @@ package sh.talonfox.pyrofrost.registry;
 
 import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.fabricmc.fabric.api.loot.v2.LootTableEvents;
 import net.minecraft.item.ArmorItem;
 import net.minecraft.item.ArmorMaterial;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemGroups;
+import net.minecraft.loot.LootPool;
+import net.minecraft.loot.entry.ItemEntry;
+import net.minecraft.loot.provider.number.BinomialLootNumberProvider;
 import net.minecraft.registry.Registries;
 import net.minecraft.registry.Registry;
 import net.minecraft.util.Identifier;
@@ -40,6 +44,12 @@ public class ItemRegistry {
             content.add(WOLF_FUR_CHESTPLATE);
             content.add(WOLF_FUR_LEGGINGS);
             content.add(WOLF_FUR_PAWS);
+        });
+        LootTableEvents.MODIFY.register((resourceManager, lootManager, id, supplier, setter) -> {
+            if ("minecraft:entities/wolf".equals(id.toString())) {
+                LootPool pool = LootPool.builder().with(ItemEntry.builder(WOLF_PELT_ITEM).build()).rolls(BinomialLootNumberProvider.create(3, 0.6F)).build();
+                supplier.pool(pool);
+            }
         });
     }
 }

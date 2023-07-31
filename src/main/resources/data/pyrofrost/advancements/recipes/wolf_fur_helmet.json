@@ -1,0 +1,35 @@
+{
+  "parent": "minecraft:recipes/root",
+  "criteria": {
+    "has_wolf_pelt": {
+      "conditions": {
+        "items": [
+          {
+            "items": [
+              "pyrofrost:wolf_pelt"
+            ]
+          }
+        ]
+      },
+      "trigger": "minecraft:inventory_changed"
+    },
+    "has_the_recipe": {
+      "conditions": {
+        "recipe": "pyrofrost:wolf_fur_helmet"
+      },
+      "trigger": "minecraft:recipe_unlocked"
+    }
+  },
+  "requirements": [
+    [
+      "has_wolf_pelt",
+      "has_the_recipe"
+    ]
+  ],
+  "rewards": {
+    "recipes": [
+      "pyrofrost:wolf_fur_helmet"
+    ]
+  },
+  "sends_telemetry_event": false
+}

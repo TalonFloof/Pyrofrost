@@ -1,0 +1,18 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "category": "equipment",
+  "key": {
+    "#": {
+      "item": "pyrofrost:wolf_pelt"
+    }
+  },
+  "pattern": [
+    "# #",
+    "###",
+    " # "
+  ],
+  "result": {
+    "item": "pyrofrost:wolf_fur_chestplate"
+  },
+  "show_notification": true
+}
