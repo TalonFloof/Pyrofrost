@@ -26,6 +26,7 @@ import net.minecraft.world.RaycastContext;
 import net.minecraft.world.biome.Biome;
 import net.minecraft.world.chunk.Chunk;
 import net.minecraft.world.chunk.PalettedContainer;
+import sh.talonfox.pyrofrost.Pyrofrost;
 import sh.talonfox.pyrofrost.modcompat.ModCompatManager;
 import sh.talonfox.pyrofrost.network.UpdateTemperature;
 import sh.talonfox.pyrofrost.registry.ItemRegistry;
@@ -350,6 +351,9 @@ public class Temperature {
                     this.skinTemp = Math.max(this.skinTemp - (coolingRate * 2.0F), NORMAL);
                 }
             }
+            if (serverPlayer.inPowderSnow && this.skinTemp >= NORMAL) {
+                tempChange = -((this.skinTemp - NORMAL) / 10.0F);
+            }
             this.skinTemp += tempChange;
             final TemperatureDirection coreTempDir = getCoreTemperatureDirection(oldSkinTemp, this.coreTemp, this.skinTemp);
             float diff = Math.abs(this.skinTemp - this.coreTemp);
@@ -474,7 +478,7 @@ public class Temperature {
         }
         if(serverPlayer.getOffHandStack().isOf(ItemRegistry.ICE_PACK_ITEM)) {
             if(serverPlayer.getOffHandStack().getDamage() < serverPlayer.getOffHandStack().getMaxDamage() - 1) {
-                airTemperature = airTemperature * 0.6F;
+                airTemperature = airTemperature * (((float)Pyrofrost.CONFIG.Server_IcePackModifier)/100F);
                 if(ticks % 60 == 0) {
                     serverPlayer.getOffHandStack().setDamage(serverPlayer.getOffHandStack().getDamage() + 1);
                 }
@@ -522,7 +526,7 @@ public class Temperature {
         AtomicReference<Float> radReduction = new AtomicReference<>(1.0F);
         serverPlayer.getArmorItems().forEach(armor -> {
             if (armor.isOf(Items.NETHERITE_HELMET) || armor.isOf(Items.NETHERITE_CHESTPLATE) || armor.isOf(Items.NETHERITE_LEGGINGS) || armor.isOf(Items.NETHERITE_BOOTS)) {
-                radReduction.updateAndGet(v -> new Float((float) (v - 0.2F)));
+                radReduction.updateAndGet(v -> new Float((float) (v - (((float) Pyrofrost.CONFIG.Server_NetheriteArmor_Resistance)/100F))));
             }
         });
         BlockPos pos = serverPlayer.getBlockPos();
@@ -670,7 +674,7 @@ public class Temperature {
         if (armorModifier != 0.0) {
             if (armor.isOf(ItemRegistry.WOLF_FUR_HELMET) || armor.isOf(ItemRegistry.WOLF_FUR_CHESTPLATE) || armor.isOf(ItemRegistry.WOLF_FUR_LEGGINGS) || armor.isOf(ItemRegistry.WOLF_FUR_PAWS)) {
                 if (isCold) {
-                    modifier += 4.0;
+                    modifier += Pyrofrost.CONFIG.Server_WolfFurArmor_Insulation;
                 }
 
                 if (isCold && wetnessModifier != -1) {
@@ -679,7 +683,7 @@ public class Temperature {
             }
             if (armor.isOf(Items.NETHERITE_HELMET) || armor.isOf(Items.NETHERITE_CHESTPLATE) || armor.isOf(Items.NETHERITE_LEGGINGS) || armor.isOf(Items.NETHERITE_BOOTS)) {
                 if(!isCold) {
-                    modifier += 8.0;
+                    modifier += Pyrofrost.CONFIG.Server_NetheriteArmor_Insulation;
                 }
             }
         }
@@ -703,7 +707,7 @@ public class Temperature {
         }
 
         if (direction != TemperatureDirection.WARMING_RAPIDLY && direction != TemperatureDirection.COOLING_RAPIDLY) {
-            modifier += getInsulationModifier(0.0, sp.getEquippedStack(EquipmentSlot.HEAD), wetnessModifier, lTemperature);
+            modifier += getInsulationModifier(Pyrofrost.CONFIG.Server_AddBaseHeadInsulation?4.3:0.0, sp.getEquippedStack(EquipmentSlot.HEAD), wetnessModifier, lTemperature);
             modifier += getInsulationModifier(4.3, sp.getEquippedStack(EquipmentSlot.CHEST), wetnessModifier, lTemperature);
             modifier += getInsulationModifier(4.3, sp.getEquippedStack(EquipmentSlot.LEGS), wetnessModifier, lTemperature);
             modifier += getInsulationModifier(4.3, sp.getEquippedStack(EquipmentSlot.FEET), wetnessModifier, lTemperature);

@@ -6,5 +6,16 @@
   "item.pyrofrost.wolf_fur_helmet": "Wolf Fur Helmet",
   "item.pyrofrost.wolf_fur_chestplate": "Wolf Fur Chestplate",
   "item.pyrofrost.wolf_fur_leggings": "Wolf Fur Leggings",
-  "item.pyrofrost.wolf_fur_paws": "Wolf Fur Paws"
+  "item.pyrofrost.wolf_fur_paws": "Wolf Fur Paws",
+  "text.autoconfig.pyrofrost.title": "Pyrofrost Config Screen",
+  "text.autoconfig.pyrofrost.category.client": "Client",
+  "text.autoconfig.pyrofrost.category.server": "Server",
+  "text.autoconfig.pyrofrost.option.Client_IconX": "Icon Relative X Position",
+  "text.autoconfig.pyrofrost.option.Client_IconY": "Icon Relative Y Position",
+  "text.autoconfig.pyrofrost.option.Client_UseFahrenheit": "Use Fahrenheit for Temperatures",
+  "text.autoconfig.pyrofrost.option.Server_AddBaseHeadInsulation": "Enable Base Insulation to Head",
+  "text.autoconfig.pyrofrost.option.Server_IcePackModifier": "Ice Pack Temperature Modifier",
+  "text.autoconfig.pyrofrost.option.Server_WolfFurArmor_Insulation": "Wolf Fur Armor Insulation Modifier",
+  "text.autoconfig.pyrofrost.option.Server_NetheriteArmor_Insulation": "Netherite Armor Insulation Modifier",
+  "text.autoconfig.pyrofrost.option.Server_NetheriteArmor_Resistance": "Netherite Armor Resistance Percentage"
 }

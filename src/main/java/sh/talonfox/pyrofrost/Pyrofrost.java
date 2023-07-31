@@ -9,17 +9,16 @@ import blue.endless.jankson.Jankson;
 import net.fabricmc.fabric.api.entity.event.v1.ServerPlayerEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerTickEvents;
-import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents;
 import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import net.minecraft.util.WorldSavePath;
-import net.minecraft.world.dimension.DimensionTypes;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import sh.talonfox.pyrofrost.config.ConfigRegistry;
+import sh.talonfox.pyrofrost.config.PyrofrostConfig;
 import sh.talonfox.pyrofrost.modcompat.ModCompatManager;
 import sh.talonfox.pyrofrost.registry.ItemRegistry;
 import sh.talonfox.pyrofrost.registry.ResourceManagerRegistry;
 import sh.talonfox.pyrofrost.temperature.Temperature;
-import sh.talonfox.pyrofrost.temperature.ThermalRadiation;
 import net.minecraft.server.MinecraftServer;
 
 import java.io.File;
@@ -30,6 +29,7 @@ import java.util.UUID;
 
 public class Pyrofrost implements ModInitializer {
     public static final Logger LOGGER = LoggerFactory.getLogger("pyrofrost");
+	public static PyrofrostConfig CONFIG;
 
 	public static HashMap<UUID, Temperature> playerTemps = new HashMap<>();
 	public static HashMap<UUID, JsonObject> playerTempSave = new HashMap<>();
@@ -84,6 +84,7 @@ public class Pyrofrost implements ModInitializer {
 
 	@Override
 	public void onInitialize() {
+		ConfigRegistry.init();
 		Temperature.initialize();
 		ModCompatManager.init();
 		ItemRegistry.init();

@@ -22,6 +22,9 @@
 		],
 		"dehydration": [
 			"sh.talonfox.pyrofrost.modcompat.DehydrationCompat"
+		],
+		"modmenu": [
+			"sh.talonfox.pyrofrost.config.ModMenuSupport"
 		]
 	},
 	"mixins": [

@@ -68,19 +68,24 @@ public class TemperatureHud implements HudRenderCallback {
                 } else {
                     offset = ((frame % 16) < 8) ? -2 : 2;
                 }
-                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 8) + offset, drawContext.getScaledWindowHeight() - 56, 16, 16, coreTexX, 0F, 16, 16, 256, 256);
-                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 10) + offset, drawContext.getScaledWindowHeight() - 58, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
+                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 8) + Pyrofrost.CONFIG.Client_IconX + offset, drawContext.getScaledWindowHeight() - 56, 16, 16, coreTexX, 0F, 16, 16, 256, 256);
+                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 10) + Pyrofrost.CONFIG.Client_IconY + offset, drawContext.getScaledWindowHeight() - 58, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
 
             } else {
-                drawContext.drawTexture(ICONS, (drawContext.getScaledWindowWidth() / 2) - 8, drawContext.getScaledWindowHeight() - 56, 16, 16, coreTexX, 0F, 16, 16, 256, 256);
-                drawContext.drawTexture(ICONS, (drawContext.getScaledWindowWidth() / 2) - 10, drawContext.getScaledWindowHeight() - 58, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
+                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 8) + Pyrofrost.CONFIG.Client_IconX, drawContext.getScaledWindowHeight() - 56, 16, 16, coreTexX, 0F, 16, 16, 256, 256);
+                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 10) + Pyrofrost.CONFIG.Client_IconY, drawContext.getScaledWindowHeight() - 58, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
             }
             for(int i = 0; i < 9; i++) {
                 if(MinecraftClient.getInstance().player.getInventory().main.get(i).getItem() == ItemRegistry.THERMOMETOR_ITEM) {
                     drawContext.getMatrices().push();
                     drawContext.getMatrices().scale(0.5F,0.5F,1F);
-                    drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,String.format("%.1f°F",Temperature.mcTempConv(PyrofrostClient.localTemp)),drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (65*2)),0xffffffff);
-                    drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer,String.format("%.1f°F",Temperature.mcTempConv(PyrofrostClient.coreTemp)),drawContext.getScaledWindowWidth(),((drawContext.getScaledWindowHeight()*2) - (50*2)),0xffffffff);
+                    if(Pyrofrost.CONFIG.Client_UseFahrenheit) {
+                        drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer, String.format("%.1f°F", Temperature.mcTempConv(PyrofrostClient.localTemp)), drawContext.getScaledWindowWidth(), ((drawContext.getScaledWindowHeight() * 2) - (65 * 2)) + (Pyrofrost.CONFIG.Client_IconX * 2), 0xffffffff);
+                        drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer, String.format("%.1f°F", Temperature.mcTempConv(PyrofrostClient.coreTemp)), drawContext.getScaledWindowWidth(), ((drawContext.getScaledWindowHeight() * 2) - (50 * 2)) + (Pyrofrost.CONFIG.Client_IconY * 2), 0xffffffff);
+                    } else {
+                        drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer, String.format("%.1f°C", Temperature.mcTempToCelsius(PyrofrostClient.localTemp)), drawContext.getScaledWindowWidth(), ((drawContext.getScaledWindowHeight() * 2) - (65 * 2)) + (Pyrofrost.CONFIG.Client_IconX * 2), 0xffffffff);
+                        drawContext.drawCenteredTextWithShadow(MinecraftClient.getInstance().textRenderer, String.format("%.1f°C", Temperature.mcTempToCelsius(PyrofrostClient.coreTemp)), drawContext.getScaledWindowWidth(), ((drawContext.getScaledWindowHeight() * 2) - (50 * 2)) + (Pyrofrost.CONFIG.Client_IconY * 2), 0xffffffff);
+                    }
                     drawContext.getMatrices().pop();
                 }
             }
