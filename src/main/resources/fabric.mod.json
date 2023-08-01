@@ -3,7 +3,7 @@
 	"id": "pyrofrost",
 	"version": "${version}",
 	"name": "Pyrofrost",
-	"description": "A temperature mod that isn't brutal to the player",
+	"description": "A temperature mod for Minecraft that isn't extremely tedious to deal with, while still adding difficulty to the game",
 	"authors": [
 		"TalonFox"
 	],

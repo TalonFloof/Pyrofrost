@@ -46,7 +46,6 @@ public class Temperature {
     public float skinTemp = 1.634457832F;
     private TemperatureDirection skinTempDir = TemperatureDirection.NONE;
     private ServerPlayerEntity serverPlayer;
-    private boolean isServerSide;
     private double envRadiation;
     private int ticks = 0;
     private double wbgt;
@@ -261,8 +260,7 @@ public class Temperature {
         seasonOffset.put(BiomeTags.DESERT_PYRAMID_HAS_STRUCTURE,40F);
     }
 
-    public Temperature(ServerPlayerEntity player, boolean shouldUpdate) {
-        isServerSide = shouldUpdate;
+    public Temperature(ServerPlayerEntity player) {
         serverPlayer = player;
     }
 
@@ -292,7 +290,12 @@ public class Temperature {
             this.skinTempDir = getSkinTemperatureDirection((float)this.wbgt, this.skinTemp);
             double insulationModifier = getInsulationModifier(serverPlayer, wetness, skinTempDir, (float)wbgt);
             boolean canSweat = skinTemp >= NORMAL && wetness == 0;
-            float tempChange = getAirTemperatureSkinChange(this.serverPlayer, insulationModifier);
+            float tempChange;
+            if (isPartialSubmersion || isSubmerged) {
+                tempChange = getWaterTemperatureSkinChange(insulationModifier);
+            } else {
+                tempChange = getAirTemperatureSkinChange(this.serverPlayer, insulationModifier);
+            }
             if (tempChange > 0.0F) {
                 switch (skinTempDir) {
                     case COOLING -> {
@@ -400,16 +403,18 @@ public class Temperature {
 
     private static double getBlackGlobe(double radiation, float dryTemp, double relativeHumidity) {
         double dryTempC = mcTempToCelsius(dryTemp);
-
         double blackGlobeTemp = (0.01498 * radiation) + (1.184 * dryTempC) - (0.0789 * (relativeHumidity / 100)) - 2.739;
-
         return tempToCelsius(blackGlobeTemp);
     }
 
     private float getBiomeTemperature(RegistryEntry<Biome> biome) {
         for(Map.Entry<TagKey<Biome>,Float> entry : temperature.entrySet()) {
             if (biome.isIn(entry.getKey())) {
-                return entry.getValue();
+                if (biome.value().getTemperature() < 0.15) {
+                    return entry.getValue()-0.446F;
+                } else {
+                    return entry.getValue();
+                }
             }
         }
         return 0.663F;
@@ -428,7 +433,11 @@ public class Temperature {
     private float getBiomeDayNightOffset(RegistryEntry<Biome> biome) {
         for(Map.Entry<TagKey<Biome>,Float> entry : dayNightOffset.entrySet()) {
             if (biome.isIn(entry.getKey())) {
-                return entry.getValue();
+                if (biome.value().getTemperature() < 0.15) {
+                    return entry.getValue()/2F;
+                } else {
+                    return entry.getValue();
+                }
             }
         }
         return 0F;
@@ -437,7 +446,11 @@ public class Temperature {
     private static float getBiomeSeasonOffset(RegistryEntry<Biome> biome) {
         for(Map.Entry<TagKey<Biome>,Float> entry : seasonOffset.entrySet()) {
             if (biome.isIn(entry.getKey())) {
-                return entry.getValue();
+                if (biome.value().getTemperature() < 0.15) {
+                    return entry.getValue()/2F;
+                } else {
+                    return entry.getValue();
+                }
             }
         }
         return 40F;
@@ -716,6 +729,32 @@ public class Temperature {
         return modifier;
     }
 
+    public float getWaterTemperatureSkinChange(double insulationModifier) {
+        float change = 0.0F;
+        float localTemperature = (float)this.wbgt;
+        double localTempF = mcTempConv(localTemperature);
+        double parityTempF = mcTempConv(1.108F);
+        double minutes;
+
+        if (this.skinTempDir == TemperatureDirection.NONE) return change;
+
+        if (localTemperature < 1.108F) {
+            double temp = Math.min(localTempF + insulationModifier, parityTempF);
+            minutes = 8.845477e-7 * Math.pow(temp, 4.75641);
+            change = (NORMAL - LOW) / (float) minutes;
+        }
+        else {
+            double temp = Math.max(localTempF - insulationModifier, parityTempF);
+            minutes = 2.981948 + (604.8711 - 2.981948) / (1 + Math.pow((temp / 109.9434), 50.72627));
+            change = (HIGH - NORMAL) / (float) minutes;
+        }
+
+        if (change != 0.0F && isPartialSubmersion) {
+            change = change / 2.0F;
+        }
+
+        return change;
+    }
 
     public float getAirTemperatureSkinChange(ServerPlayerEntity sp, double insulationModifier) {
         float localTemperature = (float)this.wbgt;
@@ -749,18 +788,14 @@ public class Temperature {
 
         if (localTemperature < 1.108F) {
             temp = Math.min(localTempF + insulationModifier, parityTempF);
-
             if (Math.abs(parityTempF - temp) > 5.0) {
                 minutes = 383.4897 + (12.38784 - 383.4897) / (1 + Math.pow((temp / 43.26779), 8.271186));
-
                 change = (NORMAL - LOW) / (float) minutes;
             }
         }
         else {
             temp = Math.max(localTempF - insulationModifier, parityTempF);
-
             if (Math.abs(parityTempF - temp) > 5.0) {
-                // It is really, really hot ... increase rapidly
                 if (temp > extremeTempF) {
                     change = (float) ((temp - extremeTempF) / 50.0) * 0.0067F;
                 } else {

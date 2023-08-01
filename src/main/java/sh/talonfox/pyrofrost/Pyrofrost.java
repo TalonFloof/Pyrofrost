@@ -97,14 +97,14 @@ public class Pyrofrost implements ModInitializer {
 			if(playerTempSave.containsKey(handler.getPlayer().getUuid())) {
 				Pyrofrost.LOGGER.info("Loading saved temperature data from Player {}...", handler.getPlayer().getUuidAsString());
 				JsonObject obj = playerTempSave.remove(handler.getPlayer().getUuid());
-				Temperature temp = new Temperature(handler.getPlayer(), true);
+				Temperature temp = new Temperature(handler.getPlayer());
 				temp.coreTemp = obj.getFloat("CoreTemperature", 1.634457832F);
 				temp.skinTemp = obj.getFloat("SkinTemperature", 1.634457832F);
 				temp.wetness = obj.getInt("Wetness", 0);
 				temp.moistureLevel = obj.getFloat("Moisture", 0F);
 				playerTemps.put(handler.getPlayer().getUuid(), temp);
 			} else {
-				playerTemps.put(handler.getPlayer().getUuid(), new Temperature(handler.getPlayer(), true));
+				playerTemps.put(handler.getPlayer().getUuid(), new Temperature(handler.getPlayer()));
 			}
 		});
 		ServerPlayConnectionEvents.DISCONNECT.register((handler, server) -> {
@@ -124,7 +124,7 @@ public class Pyrofrost implements ModInitializer {
 		});
 		ServerPlayerEvents.AFTER_RESPAWN.register((oldP, newP, alive) -> {
 			playerTemps.remove(oldP.getUuid());
-			playerTemps.put(newP.getUuid(),new Temperature(newP,true));
+			playerTemps.put(newP.getUuid(),new Temperature(newP));
 		});
 	}
 }
