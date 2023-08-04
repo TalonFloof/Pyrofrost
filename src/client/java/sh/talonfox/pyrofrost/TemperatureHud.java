@@ -68,12 +68,12 @@ public class TemperatureHud implements HudRenderCallback {
                 } else {
                     offset = ((frame % 16) < 8) ? -2 : 2;
                 }
-                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 8) + Pyrofrost.CONFIG.Client_IconX + offset, drawContext.getScaledWindowHeight() - 56, 16, 16, coreTexX, 0F, 16, 16, 256, 256);
-                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 10) + Pyrofrost.CONFIG.Client_IconY + offset, drawContext.getScaledWindowHeight() - 58, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
+                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 8) + Pyrofrost.CONFIG.Client_IconX + offset, drawContext.getScaledWindowHeight() - 56 + Pyrofrost.CONFIG.Client_IconY, 16, 16, coreTexX, 0F, 16, 16, 256, 256);
+                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 10) + Pyrofrost.CONFIG.Client_IconX + offset, drawContext.getScaledWindowHeight() - 58 + Pyrofrost.CONFIG.Client_IconY, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
 
             } else {
-                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 8) + Pyrofrost.CONFIG.Client_IconX, drawContext.getScaledWindowHeight() - 56, 16, 16, coreTexX, 0F, 16, 16, 256, 256);
-                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 10) + Pyrofrost.CONFIG.Client_IconY, drawContext.getScaledWindowHeight() - 58, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
+                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 8) + Pyrofrost.CONFIG.Client_IconX, drawContext.getScaledWindowHeight() - 56 + Pyrofrost.CONFIG.Client_IconY, 16, 16, coreTexX, 0F, 16, 16, 256, 256);
+                drawContext.drawTexture(ICONS, ((drawContext.getScaledWindowWidth() / 2) - 10) + Pyrofrost.CONFIG.Client_IconX, drawContext.getScaledWindowHeight() - 58 + Pyrofrost.CONFIG.Client_IconY, 20, 20, skinTexX, 16F, 20, 20, 256, 256);
             }
             for(int i = 0; i < 9; i++) {
                 if(MinecraftClient.getInstance().player.getInventory().main.get(i).getItem() == ItemRegistry.THERMOMETOR_ITEM) {
