@@ -1,0 +1,21 @@
+{
+  "death.attack.hyperthermia": "%1$s перетворено на тост",
+  "item.pyrofrost.thermometor": "Термометр",
+  "item.pyrofrost.ice_pack": "Пакет з льодом",
+  "item.pyrofrost.wolf_pelt": "Вовча шкіра",
+  "item.pyrofrost.wolf_fur_helmet": "Шолом з вовчого хутра",
+  "item.pyrofrost.wolf_fur_chestplate": "Нагрудник з вовчого хутра",
+  "item.pyrofrost.wolf_fur_leggings": "Наголінники з вовчого хутра",
+  "item.pyrofrost.wolf_fur_paws": "Лапи з вовчого хутра",
+  "text.autoconfig.pyrofrost.title": "Екран конфігурації Pyrofrost",
+  "text.autoconfig.pyrofrost.category.client": "Клієнт",
+  "text.autoconfig.pyrofrost.category.server": "Сервер",
+  "text.autoconfig.pyrofrost.option.Client_IconX": "Позиція іконки відносно X",
+  "text.autoconfig.pyrofrost.option.Client_IconY": "Позиція іконки відносно Y",
+  "text.autoconfig.pyrofrost.option.Client_UseFahrenheit": "Використовувати Фаренгейта для температур",
+  "text.autoconfig.pyrofrost.option.Server_AddBaseHeadInsulation": "Увімкнути базову ізоляцію голови",
+  "text.autoconfig.pyrofrost.option.Server_IcePackModifier": "Множник температури пакета з льодом",
+  "text.autoconfig.pyrofrost.option.Server_WolfFurArmor_Insulation": "Множник ізоляції обладунків з вовчого хутра",
+  "text.autoconfig.pyrofrost.option.Server_NetheriteArmor_Insulation": "Множник ізоляції незеритових обладунків",
+  "text.autoconfig.pyrofrost.option.Server_NetheriteArmor_Resistance": "Відсоток стійкості незеритових обладунків"
+}
