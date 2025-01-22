@@ -1,3 +1,4 @@
+<div align="center"><h1>This mod is discontinued and will not support any future updates</h1></div><br>
 <div align="center"><img src="docs/Pyrofrost.png"></div><br><br>
     <img src="docs/About.png">
 
